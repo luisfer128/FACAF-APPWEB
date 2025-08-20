@@ -182,9 +182,16 @@ function buildMetrics(rows) {
     mapMat.set(m, o);
   });
   const materias = [...mapMat.entries()]
-    .map(([materia, o]) => ({ materia, reprobados:o.rep, total:o.total, pct:o.total? (o.rep/o.total) : 0 }))
-    .sort((a,b)=> b.reprobados - a.reprobados)
-    .slice(0,10);
+  .map(([materia, o]) => ({
+    materia,
+    reprobados: o.rep,
+    total: o.total,
+    pct: o.total ? (o.rep / o.total) : 0
+  }))
+  // ordenar de mayor a menor % reprobados
+  .sort((a, b) => b.pct - a.pct || b.reprobados - a.reprobados)
+  .slice(0, 10);
+
 
   return { registros, estudiantes, vezCounts, estadoCounts, bins, materias };
 }

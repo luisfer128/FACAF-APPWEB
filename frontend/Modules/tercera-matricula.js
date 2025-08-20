@@ -266,9 +266,14 @@ async function buildRows() {
 function renderTable(rows) {
   const tbody = document.getElementById('academicTrackingTableBody');
   const totalSpan = document.getElementById('total-students');
+  const totalStu = document.getElementById('total-materia');
   if (!tbody) return;
 
   tbody.innerHTML = '';
+
+  // 🔹 Set para estudiantes únicos
+  const uniqueStudents = new Set();
+
   rows.forEach(r => {
     const tr = document.createElement('tr');
     tr.insertCell().textContent = r.Identificacion;
@@ -285,10 +290,15 @@ function renderTable(rows) {
     cbCell.appendChild(cb);
 
     tbody.appendChild(tr);
+
+    // 🔹 Agregamos al Set
+    uniqueStudents.add(r.Identificacion);
   });
 
   if (totalSpan) totalSpan.textContent = `Total de Registros: ${rows.length}`;
+  if (totalStu) totalStu.textContent = `Total de Estudiantes: ${uniqueStudents.size}`;
 }
+
 
 /* ===========================
  * Main

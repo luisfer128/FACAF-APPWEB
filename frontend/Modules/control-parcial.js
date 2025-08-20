@@ -242,13 +242,17 @@ async function buildRows() {
  * =========================== */
 function renderTable(rows) {
   const tbody = document.getElementById('academicTrackingTableBody');
-  const totalSpan = document.getElementById('total-students');
+  const totalStu = document.getElementById('total-students'); // total estudiantes únicos
+  const totalSpan= document.getElementById('total-materia');  // total de materias
   const resumen = document.getElementById('estado-resumen');
   if (!tbody) return;
 
   tbody.innerHTML = '';
   let skullCount = 0;
   let warnCount = 0;
+
+  // 🔹 Set para contar estudiantes únicos
+  const uniqueStudents = new Set();
 
   rows.forEach(r => {
     const tr = document.createElement('tr');
@@ -271,11 +275,15 @@ function renderTable(rows) {
 
     tbody.appendChild(tr);
 
+    // 🔹 Contar estudiantes únicos
+    uniqueStudents.add(r.Identificación);
+
     if (r.Estado === '💀') skullCount++;
     else if (r.Estado === '⚠️') warnCount++;
   });
 
-  if (totalSpan) totalSpan.textContent = `Total de Estudiantes: ${rows.length}`;
+  if (totalSpan) totalSpan.textContent = `Total de Materias: ${rows.length}`;
+  if (totalStu) totalStu.textContent   = `Total de Estudiantes: ${uniqueStudents.size}`;
   if (resumen) {
     resumen.innerHTML = `
       <span id="skull-count" class="count-badge count-badge--skull">💀: <strong>${skullCount}</strong></span> |
@@ -283,6 +291,7 @@ function renderTable(rows) {
     `;
   }
 }
+
 
 /* ===========================
  * Main

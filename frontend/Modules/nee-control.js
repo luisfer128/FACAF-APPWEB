@@ -147,12 +147,25 @@ document.addEventListener('DOMContentLoaded', async () => {
       const riesgoCell = row.insertCell();
       const bar = document.createElement('div');
       bar.className = 'riesgo-bar';
-      const intensidad = Math.min((student["[Vez] Materia (Docente)"]?.length || 0) * 10, 100);
+
+      let riesgoTotal = 0;
+      (student["[Vez] Materia (Docente)"] || []).forEach(m => {
+        const match = String(m).match(/^\[(\d+)\]/);
+        const vez = match ? parseInt(match[1], 10) : 1;
+
+        if (vez === 1) riesgoTotal += 1;
+        else if (vez === 2) riesgoTotal += 4;
+        else if (vez >= 3) riesgoTotal += 6;
+      });
+
+      // multiplicamos por 10 para mantener el efecto visual original
+      const intensidad = Math.min(riesgoTotal * 10, 100);
+
       bar.style.width = `${intensidad}%`;
       bar.style.backgroundColor = `hsl(${120 - intensidad}, 100%, 40%)`;
-      bar.style.height = '12px';
       bar.style.borderRadius = '6px';
       riesgoCell.appendChild(bar);
+
 
       const enviarCell = row.insertCell();
       const checkbox = document.createElement('input');
