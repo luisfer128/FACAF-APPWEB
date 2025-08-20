@@ -8,8 +8,6 @@ services:
       ACCEPT_EULA: "Y"
     ports:
       - "1433:1433"
-    volumes:
-      - sql_data:/var/opt/mssql
     healthcheck:
       test: ["CMD-SHELL", "/opt/mssql-tools/bin/sqlcmd -S localhost -U SA -P '$$SA_PASSWORD' -Q 'SELECT 1'"]
       interval: 10s
