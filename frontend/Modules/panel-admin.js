@@ -1,7 +1,7 @@
 // Modules/admin.js
 import { loadData, saveData } from '../indexeddb-storage.js';
 
-const API_BASE = 'http://0.0.0.0:5000';
+const API_BASE = 'http://178.128.10.70:5000';
 const DEBUG = false;
 
 // ====== DOM ======
