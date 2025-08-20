@@ -1,25 +1,22 @@
 version: "3.9"
+
 services:
   db:
-    image: mcr.microsoft.com/mssql/server:2019-latest
+    image: mcr.microsoft.com/azure-sql-edge
     container_name: sqlserver
     environment:
       SA_PASSWORD: "FACAF@DB2025@"
       ACCEPT_EULA: "Y"
     ports:
       - "1433:1433"
-    healthcheck:
-      test: ["CMD-SHELL", "/opt/mssql-tools/bin/sqlcmd -S localhost -U SA -P '$$SA_PASSWORD' -Q 'SELECT 1'"]
-      interval: 10s
-      timeout: 5s
-      retries: 10
+    volumes:
+      - sql_data:/var/opt/mssql
 
   backend:
     build: ./backend
     container_name: backend_app
     depends_on:
-      db:
-        condition: service_healthy
+      - db
     env_file:
       - ./backend/archivos/.env
     ports:
