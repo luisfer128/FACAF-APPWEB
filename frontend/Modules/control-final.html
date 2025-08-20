@@ -1,0 +1,68 @@
+<!doctype html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Control Final</title>
+  <link rel="stylesheet" href="../styles/tables.css">
+  <link rel="stylesheet" href="/style.css">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+  <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+  <script>
+    (function () {
+      var theme = localStorage.getItem('theme') || 'light';
+      var root = document.documentElement;
+      if (theme === 'dark') root.classList.add('dark-mode');
+      root.classList.add('no-theme-transitions');
+    })();
+  </script>
+</head>
+<body>
+  <div class="container">
+    <div class="header">
+      <div class="filter-section">
+        <label for="filter-input">Filtrar:</label>
+        <input type="text" id="filterAcademicInput" placeholder="Filtrar estudiantes...">
+      </div>
+      <span id="current-period-label" class="period-label"></span>
+      <h2 class="title">Control Final</h2>
+      <span id="total-students" class="total-students">Total de Estudiantes: 0</span>
+      <span id="estado-resumen" style="font-weight: bold;"></span>
+      <div class="button-group">
+        <button id="sendAcademicEmails" class="action-button">Enviar Correos</button>
+        <button id="goToMenuButton" class="action-button secondary-button">Ir a Menú</button>
+      </div>
+    </div>
+
+    <table id="academic-tracking-table">
+      <thead>
+        <tr>
+          <th>Identificación</th>
+          <th>Estudiante</th>
+          <th>Correo</th>
+          <th>NEE</th>
+          <th>Nivel</th>
+          <th>[Vez] Materia (Docente)</th>
+          <th>Parcial Final/[Mejor/Recup]</th>
+          <th>Promedio</th>
+          <th>Estado</th>
+          <th>Enviar?</th>
+        </tr>
+      </thead>
+      <tbody id="academicTrackingTableBody">
+        <!-- Llenado dinámico -->
+      </tbody>
+    </table>
+  </div>
+
+  <script defer type="module" src="../indexeddb-storage.js"></script>
+  <script defer type="module" src="./control-final.js"></script>
+  <script>
+      window.addEventListener('DOMContentLoaded', function () {
+        requestAnimationFrame(function () {
+          document.documentElement.classList.remove('no-theme-transitions');
+        });
+      });
+    </script>
+</body>
+</html>

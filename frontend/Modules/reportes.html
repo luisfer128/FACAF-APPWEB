@@ -1,0 +1,153 @@
+<!doctype html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Reportes</title>
+
+  <!-- Estilos -->
+  <link rel="stylesheet" href="../styles/reportes.css" />
+  <link rel="stylesheet" href="../styles/config.css" />
+  <!-- Iconos -->
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
+  <!-- Chart.js -->
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+  <script>
+    (function () {
+      var theme = localStorage.getItem('theme') || 'light';
+      var root = document.documentElement;
+      if (theme === 'dark') root.classList.add('dark-mode');
+      root.classList.add('no-theme-transitions');
+    })();
+  </script>
+</head>
+<body>
+  <div class="page-container">
+    <header class="header">
+      <h1 class="title"><i class="fa-solid fa-chart-line"></i> Reportes generales</h1>
+      <p class="subtitle">Resumen visual del <strong>REPORTE_RECORD_CALIFICACIONES_POR_PARCIAL_TOTAL</strong></p>
+      <div class="toolbar">
+        <div class="period-select-container">
+          <label for="period-select" class="label"><strong>Periodo:</strong></label>
+          <select id="period-select"></select>
+        </div>
+        <div class="actions">
+          <button id="btn-back" class="btn secondary">
+            <i class="fa-solid fa-arrow-left"></i> Ir a Menú
+          </button>
+          <button id="btn-print" class="btn">
+            <i class="fa-solid fa-print"></i> Imprimir
+          </button>
+        </div>
+      </div>
+    </header>
+
+    <main class="content">
+      <!-- KPIs -->
+      <section class="cards">
+        <div class="card kpi">
+          <div class="kpi-icon"><i class="fa-regular fa-rectangle-list"></i></div>
+          <div class="kpi-body">
+            <div class="kpi-label">Registros</div>
+            <div id="kpi-registros" class="kpi-value">–</div>
+          </div>
+        </div>
+        <div class="card kpi">
+          <div class="kpi-icon"><i class="fa-solid fa-user-check"></i></div>
+          <div class="kpi-body">
+            <div class="kpi-label">Estudiantes únicos</div>
+            <div id="kpi-estudiantes" class="kpi-value">–</div>
+          </div>
+        </div>
+        <div class="card kpi">
+          <div class="kpi-icon"><i class="fa-solid fa-repeat"></i></div>
+          <div class="kpi-body">
+            <div class="kpi-label">Distribución por vez</div>
+            <div id="kpi-no-vez" class="kpi-value small">1: –, 2: –, 3+: –</div>
+          </div>
+        </div>
+      </section>
+
+      <!-- Gráficos -->
+      <section class="grid">
+        <!-- Barras horizontales NO. VEZ -->
+        <div class="card-vez">
+          <h3><i class="fa-solid fa-layer-group"></i>Materias por repetición</h3>
+          <canvas id="chartNoVez"></canvas>
+        </div>
+
+        <!-- Aprobados vs Reprobados -->
+        <div class="card">
+          <h3><i class="fa-solid fa-circle-half-stroke"></i> Aprobados vs Reprobados</h3>
+          <canvas id="chartAprobReprob"></canvas>
+        </div>
+
+        <!-- NUEVO: Pastel NO. VEZ independiente -->
+        <!-- Estudiantes por periodo -->
+        <div class="card">
+            <h3><i class="fa-solid fa-users"></i> Estudiantes por periodo</h3>
+            <canvas id="chartEstPorPeriodo"></canvas>
+        </div>
+
+        <!-- Histograma ocupa todo el ancho -->
+        <div class="card wide">
+          <h3><i class="fa-solid fa-chart-column"></i> Histograma de PROMEDIO (0–10)</h3>
+          <canvas id="chartHist"></canvas>
+        </div>
+      </section>
+
+      <!-- Tablas -->
+      <section class="grid">
+        <div class="card">
+          <h3><i class="fa-solid fa-book"></i> Top 10 materias con más reprobados</h3>
+          <div class="table-wrap">
+            <table class="table" id="tbl-materias">
+              <thead>
+                <tr>
+                  <th>#</th>
+                  <th>Materia</th>
+                  <th>Reprobados</th>
+                  <th>Total</th>
+                  <th>% Reprob.</th>
+                </tr>
+              </thead>
+              <tbody></tbody>
+            </table>
+          </div>
+        </div>
+
+        <div class="card">
+          <h3><i class="fa-solid fa-chalkboard-user"></i> Top 10 docentes con más reprobados</h3>
+          <div class="table-wrap">
+            <table class="table" id="tbl-docentes">
+              <thead>
+                <tr>
+                  <th>#</th>
+                  <th>Docente</th>
+                  <th>Reprobados</th>
+                  <th>Total</th>
+                  <th>% Reprob.</th>
+                </tr>
+              </thead>
+              <tbody></tbody>
+            </table>
+          </div>
+        </div>
+      </section>
+
+    </main>
+  </div>
+
+  <!-- Módulo -->
+  <script type="module" src="./reportes.js"></script>
+  <!-- Helper de IndexedDB -->
+  <script type="module" src="../indexeddb-storage.js"></script>
+  <script>
+      window.addEventListener('DOMContentLoaded', function () {
+        requestAnimationFrame(function () {
+          document.documentElement.classList.remove('no-theme-transitions');
+        });
+      });
+    </script>
+</body>
+</html>

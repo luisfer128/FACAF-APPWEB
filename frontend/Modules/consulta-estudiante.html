@@ -1,0 +1,103 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <title>Consulta Estudiante</title>
+  <link rel="stylesheet" href="../styles/consulta-estudiante.css">
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+  <script>
+    (function () {
+      var theme = localStorage.getItem('theme') || 'light';
+      var root = document.documentElement;
+      if (theme === 'dark') root.classList.add('dark-mode');
+      root.classList.add('no-theme-transitions');
+    })();
+  </script>
+</head>
+<body>
+  <main class="module-container">
+    <h1>Consulta Estudiante</h1>
+    <p class="module-description">Revisión de historial académico por estudiante</p>
+    <button id="goToMenuButton" class="action-button secondary-button">Ir a Menú</button>
+
+    <div class="filter-bar">
+      <label for="studentFilter"><strong>Filtrar:</strong></label>
+      <input type="text" id="studentFilter" placeholder="Cédula o nombre" />
+      <button id="searchButton" type="button" class="action-button secondary-button" aria-label="Buscar">
+        🔍 Buscar
+      </button>
+      <button id="clearButton" class="secondary-button" aria-label="Limpiar búsqueda">Limpiar</button>
+    </div>
+
+    <!-- ========= VISTA GENERAL ========= -->
+    <section class="chart-section" id="sectionDistribucion">
+      <h3>Distribución de Promedios Generales</h3>
+      <canvas id="chartDistribucionPromedios" class="chart-canvas"></canvas>
+    </section>
+
+    <section class="chart-section" id="sectionPromedioNivel">
+      <h3>Promedio por Nivel</h3>
+      <canvas id="chartPromedioPorNivel" class="chart-canvas"></canvas>
+      <h3>Promedio por Nivel - Pedagogía</h3>
+      <canvas id="chartPedagogia" class="chart-canvas"></canvas>
+      <h3>Promedio por Nivel - Entrenamiento Deportivo</h3>
+      <canvas id="chartEntrenamiento" class="chart-canvas"></canvas>
+    </section>
+
+    <section class="chart-section" id="sectionHeatmaps">
+      <h3>Mapas de Calor - Porcentaje de Reprobados</h3>
+
+      <div class="heatmap-container">
+        <h4>Todas las Materias</h4>
+        <canvas id="heatmapGeneral"></canvas>
+      </div>
+
+      <div class="heatmap-container">
+        <h4>Pedagogía de la Actividad Física y Deporte</h4>
+        <canvas id="heatmapPAF"></canvas>
+      </div>
+
+      <div class="heatmap-container">
+        <h4>Entrenamiento Deportivo</h4>
+        <canvas id="heatmapEntrenamiento"></canvas>
+      </div>
+    </section>
+
+    <!-- ========= VISTA DEL ESTUDIANTE ========= -->
+    <section id="studentDetails" style="display:none;">
+      <h2 id="studentHeading" style="margin-top:1rem;">Datos Generales</h2>
+      <div class="card like-table">
+        <table class="info-table">
+          <tbody id="studentInfoBody"></tbody>
+        </table>
+      </div>
+
+      <div class="chart-section">
+        <div style="display:grid; gap:24px; grid-template-columns:1fr 1fr;">
+          <div>
+            <h3>Promedio por período</h3>
+            <canvas id="chartEstudianteLine"></canvas>
+          </div>
+          <div>
+            <h3>Aprobadas vs Reprobadas por período</h3>
+            <canvas id="chartEstudianteBars"></canvas>
+          </div>
+        </div>
+      </div>
+
+      <div id="studentAccordion" style="margin-top:18px;"></div>
+    </section>
+
+    <div id="top10ReprobadosContainer"></div>
+  </main>
+
+  <script type="module" src="consulta-estudiante.js"></script>
+  <script>
+      window.addEventListener('DOMContentLoaded', function () {
+        requestAnimationFrame(function () {
+          document.documentElement.classList.remove('no-theme-transitions');
+        });
+      });
+    </script>
+</body>
+</html>

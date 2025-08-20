@@ -1,0 +1,162 @@
+/* ===== Variables ===== */
+:root{
+  --bg:#f6f8fb;
+  --card:#ffffff;
+  --text:#0f172a;
+  --muted:#6b7280;
+  --primary:#1e40af;
+  --accent:#3b82f6;
+  --accent-2:#22c55e;
+  --danger:#ef4444;
+  --border:#e5e7eb;
+  --shadow:0 10px 25px rgba(0,0,0,.06);
+  --radius:14px;
+  --chart-h:460px;
+  --chart-h-sm:340px;
+  --bg-btn: #cecece;
+}
+
+.dark-mode{
+  --bg:#0b1220;
+  --card:#111827;
+  --text:#fff;
+  --muted:#9ca3af;
+  --primary:#93c5fd;
+  --accent:#2563eb;
+  --accent-2:#22c55e;
+  --danger:#ef4444;
+  --border:#1f2937;
+  --shadow:0 12px 28px rgba(0,0,0,.28);
+  --bg-btn: #2563eb;
+}
+
+/* ===== Reset ===== */
+*{ box-sizing:border-box; }
+html, body{ height:100%; }
+body{
+  margin:0;
+  font-family: system-ui, -apple-system, "Segoe UI", Roboto, Inter, Arial, sans-serif;
+  background: var(--bg);
+  color: var(--text);
+  line-height:1.45;
+}
+
+/* Contenedor */
+.module-container{
+  max-width:1200px; margin:28px auto; padding:24px;
+  background: var(--card); border:1px solid var(--border); border-radius: var(--radius); box-shadow: var(--shadow);
+}
+
+h1{ margin:0 0 4px; font-size: clamp(26px, 3vw, 36px); color: var(--primary); letter-spacing:.3px; }
+.module-description{ margin:0 0 18px; color: var(--muted); }
+
+.acordeon{
+  background: #0b1220;
+}
+
+/* Botones */
+.action-button, button{
+  appearance:none; border:1px solid transparent; border-radius:10px; padding:10px 14px; font-weight:600; cursor:pointer;
+  transition: transform .04s ease, box-shadow .2s ease, background .2s ease;
+}
+.action-button{ background: var(--accent); color:#fff; box-shadow: 0 6px 14px rgba(59,130,246,.25); }
+.action-button:hover{ filter: brightness(.97); }
+.action-button:active{ transform: translateY(1px); }
+.secondary-button{ background: var(--bg-btn); color: var(--text); border-color: var(--border); }
+.secondary-button:hover{ background: color-mix(in srgb, var(--card) 96%, transparent); }
+
+/* Ir a menú */
+#goToMenuButton{ float:right; margin-top:-60px;}
+
+/* Filtro */
+.filter-bar{
+  display:flex; align-items:center; gap:10px; padding:14px; margin:12px 0 18px;
+  background: color-mix(in srgb, var(--card) 96%, transparent);
+  border:1px solid var(--border); border-radius:12px;
+}
+.filter-bar label{ color: var(--text); }
+.filter-bar input{
+  flex:1 1 380px; padding:10px 12px; border:1px solid var(--border); border-radius:10px; outline:none;
+  background: var(--card); color: var(--text);
+}
+.filter-bar input:focus{ border-color: var(--accent); box-shadow:0 0 0 3px color-mix(in srgb, var(--accent) 20%, transparent); }
+
+/* Secciones / charts */
+.chart-section, .card{
+  margin:16px 0; padding:18px; background: var(--card);
+  border:1px solid var(--border); border-radius: var(--radius); box-shadow: var(--shadow);
+}
+.chart-section h3{ margin:2px 0 14px; color: var(--primary); font-size: clamp(18px, 2vw, 22px); }
+
+/* Info table */
+.info-table{ width:100%; border-collapse:collapse; }
+.info-table th, .info-table td{ padding:10px 12px; border-bottom:1px dashed color-mix(in srgb, var(--border) 85%, transparent); vertical-align:top; }
+.info-table th{ width:220px; color: var(--text); font-weight:700; white-space:nowrap; }
+.info-table td{ color: var(--text); }
+#studentHeading{ font-size: clamp(20px, 2.4vw, 28px); color: var(--primary); margin:6px 0 10px; }
+
+/* Grids estudiante */
+#studentDetails .chart-section > div{ display:grid; grid-template-columns:1fr 1fr; gap:24px; }
+@media (max-width:960px){ #studentDetails .chart-section > div{ grid-template-columns:1fr; } }
+
+/* Canvas */
+canvas{ width:100% !important; height:auto !important; }
+.chart-canvas{ width:100% !important; max-height:400px; }
+
+/* Acordeón */
+details{ background: var(--card); border:1px solid var(--border); border-radius:12px; box-shadow: var(--shadow); }
+details + details{ margin-top:10px; }
+summary{
+  list-style:none; cursor:pointer; padding:12px 14px; font-weight:700; color: var(--text); display:flex; align-items:center; gap:10px;
+}
+summary::before{ content:"▸"; display:inline-block; transform: translateY(-1px); color: var(--primary); transition: transform .2s ease; }
+details[open] summary::before{ transform: rotate(90deg); }
+details > div{ padding:10px 14px 14px; }
+
+/* Tablas internas */
+table.striped{ width:100%; border-collapse:collapse; min-width:740px; }
+table.striped thead th{
+  text-align:left; font-size:13.5px; letter-spacing:.2px; color: var(--muted);
+  padding:10px 12px; border-bottom:1px solid var(--border); background: color-mix(in srgb, var(--card) 96%, transparent);
+}
+table.striped tbody td{ padding:10px 12px; border-bottom:1px solid color-mix(in srgb, var(--border) 90%, transparent); }
+table.striped tbody tr:nth-child(even){ background: color-mix(in srgb, var(--card) 94%, transparent); }
+
+/* Heatmaps contenedor */
+.heatmap-container{
+  margin:12px 0 18px; padding:10px; background: color-mix(in srgb, var(--card) 96%, transparent);
+  border:1px solid var(--border); border-radius:12px;
+}
+.heatmap-container h4{ margin:6px 0 12px; color: var(--primary); }
+
+/* Utils */
+.muted{ color: var(--muted); } .center{ text-align:center; }
+
+/* Acordeón Top 10 */
+.top10-acc{ background: var(--card); border:1px solid var(--border); border-radius:8px; overflow:hidden; }
+.top10-acc__header{ background: color-mix(in srgb, var(--card) 96%, transparent); color: var(--text); }
+.top10-acc__content{ background: var(--card); }
+.top10-acc__table-wrap{ border-top:1px solid var(--border); }
+
+/* Tabla en oscuro: que no quede “blanca” */
+.dark-mode .top10-acc__table.striped thead th{ background:#0f172a; color:#e5e7eb; }
+.dark-mode .top10-acc__table.striped tbody tr:nth-child(even){ background:#0f172a; }
+.dark-mode .top10-acc__table.striped th,
+.dark-mode .top10-acc__table.striped td{ color:#e5e7eb; border-bottom:1px solid #1f2937; }
+
+/* Responsive */
+@media (max-width:720px){
+  #goToMenuButton{ float:none; margin:0 0 8px; }
+  .filter-bar{ flex-wrap:wrap; }
+  .info-table th{ width:160px; }
+  canvas{ height:300px !important; }
+}
+@media (max-width:480px){
+  .module-container{ padding:16px; }
+  .filter-bar{ padding:12px; }
+  .info-table th{ width:140px; }
+  canvas{ height:260px !important; }
+}
+@media (max-width:960px){
+  canvas{ height: var(--chart-h-sm) !important; }
+}

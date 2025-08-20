@@ -1,0 +1,354 @@
+/* Heredamos la estética de config.css (gradiente, cards, botones)
+   y agregamos ajustes propios de la página de reportes. */
+
+:root{
+  --c1:#1095c9;
+  --c2:#174a9e;
+  --ink:#1f2937;
+  --muted:#6b7280;
+  --ok:#28a745;
+  --danger:#dc3545;
+  --card-bg: rgba(255,255,255,.95);
+}
+
+/* ===== Dark mode (solo colores) ===== */
+
+/* Paleta base en oscuro */
+.dark-mode{
+  --ink:#e5e7eb;
+  --muted:#9ca3af;
+  --card-bg:#111827;
+}
+
+/* Fondo general en oscuro (funciona si .dark-mode está en <html> o en <body>) */
+html.dark-mode body,
+body.dark-mode{
+  background: linear-gradient(90deg, #0b1220 0%, #0b1220 73%);
+  color: var(--ink);
+}
+
+/* Cards / header */
+.dark-mode .header,
+.dark-mode .card,
+.dark-mode .card-vez{
+  background: var(--card-bg);
+  border: 1px solid #1f2937;            /* borde más neutro en oscuro */
+  box-shadow: 0 12px 28px rgba(0,0,0,.28);
+}
+
+/* Textos secundarios */
+.dark-mode .subtitle,
+.dark-mode .kpi-label,
+.dark-mode .card-vez .subchart h4{
+  color: var(--muted);
+}
+
+/* KPI */
+.dark-mode .kpi-value.small{ color: var(--ink); }
+.dark-mode .kpi-icon{
+  background: linear-gradient(135deg, rgba(59,130,246,.08), rgba(30,58,138,.08));
+  color: #93c5fd;
+  border: 1px solid rgba(59,130,246,.25);
+}
+
+/* Tablas */
+.dark-mode .table th,
+.dark-mode .table td{
+  border-bottom: 1px solid #1f2937;
+  color: var(--ink);
+}
+.dark-mode .table thead th{
+  background: #0f172a;
+  color: #e5e7eb;
+}
+.dark-mode .table tbody tr:hover{
+  background: rgba(96,165,250,.12);
+}
+
+/* Select de periodo */
+.dark-mode .period-select-container .label{ color: var(--ink); }
+.dark-mode #period-select{
+  background: #0b1220;
+  color: #e5e7eb;
+  border: 1.5px solid #334155;
+  box-shadow: none;
+}
+.dark-mode #period-select:focus{
+  outline: none;
+  border-color: #2563eb;
+  box-shadow: 0 0 0 3px rgba(37,99,235,.25);
+}
+
+/* Alertas */
+.dark-mode .no-data{
+  background: rgba(239,68,68,.12);
+  border: 1px solid rgba(239,68,68,.45);
+  color: #fecaca;
+}
+
+* { box-sizing: border-box; }
+
+html, body {
+  height: 100%;
+}
+
+body {
+  margin: 0;
+  font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+  background: linear-gradient(90deg, var(--c1) 0%, var(--c2) 73%);
+  color: var(--ink);
+}
+
+.page-container{
+  max-width: 1200px;
+  margin: 24px auto;
+  padding: 16px;
+}
+
+.header{
+  background: var(--card-bg);
+  border-radius: 16px;
+  padding: 24px;
+  box-shadow: 0 20px 60px rgba(0,0,0,.15);
+  border: 1px solid rgba(255,255,255,.2);
+}
+
+.title{
+  margin: 0 0 6px;
+  font-size: 1.8rem;
+  display:flex;align-items:center;gap:10px;
+}
+
+.subtitle{ margin:0 0 16px; color:#475569; }
+
+.toolbar{
+  display:flex;
+  gap:12px;
+  align-items:center;
+  justify-content:space-between;
+  flex-wrap: wrap;
+}
+
+.actions{ display:flex; gap:8px; }
+
+.btn{
+  background: linear-gradient(135deg, var(--c1) 0%, var(--c2) 100%);
+  color:#fff; border:none; padding:12px 18px; border-radius:12px;
+  font-weight:600; cursor:pointer; transition:.2s; display:inline-flex; gap:8px; align-items:center;
+}
+.btn:hover{ box-shadow: 0 12px 30px rgba(16,149,201,.4); }
+.btn.secondary{
+  background: linear-gradient(135deg, #6c757d 0%, #495057 100%);
+}
+
+.content{ margin-top:16px; }
+
+/* Tarjeta especial para gráfico de NO. VEZ horizontal */
+.card-vez {
+  background: var(--card-bg);
+  border-radius: 16px;
+  padding: 20px;
+  border: 1px solid rgba(255,255,255,.2);
+  box-shadow: 0 10px 30px rgba(0,0,0,.08);
+  display: flex;
+  flex-direction: column;
+}
+
+.card-vez h3 {
+  margin: 0 0 12px;
+  font-size: 1.1rem;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+
+.cards, .cards-vez {
+  display:grid;
+  grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
+  gap:16px;
+}
+
+.card, .cards-vez {
+  background: var(--card-bg);
+  border-radius:16px;
+  padding:20px;
+  border: 1px solid rgba(255,255,255,.2);
+  box-shadow: 0 10px 30px rgba(0,0,0,.08);
+}
+.card h3{
+  margin:0 0 12px; font-size:1.1rem; display:flex; align-items:center; gap:10px;
+}
+
+.card.wide{
+  grid-column: 1 / -1;
+}
+
+.kpi{
+  display:flex; gap:14px; align-items:center;
+}
+.kpi-icon{
+  width:52px; height:52px; border-radius:12px;
+  background: linear-gradient(135deg, rgba(16,149,201,.1), rgba(23,74,158,.1));
+  display:grid; place-items:center; color:var(--c2); font-size:1.25rem;
+  border:1px solid rgba(16,149,201,.25);
+}
+.kpi-body{ flex:1; }
+.kpi-label{ color:#475569; font-size:.9rem; }
+.kpi-value{ font-weight:800; font-size:1.6rem; }
+.kpi-value.small{ font-size:1rem; color:#0f172a; }
+
+.grid{
+  margin-top:16px;
+  display:grid; gap:16px;
+  grid-template-columns: repeat(auto-fit, minmax(320px, 1fr));
+}
+
+.table-wrap{ overflow:auto; }
+
+.table{
+  width:100%; border-collapse: collapse; font-size:.95rem;
+}
+.table th, .table td{
+  text-align:left; padding:10px 12px; border-bottom:1px solid #e5e7eb;
+}
+.table thead th{
+  position: sticky; top: 0; background: #f8fafc; z-index:1;
+}
+.table tbody tr:hover{
+  background: rgba(16,149,201,.06);
+}
+
+.no-data{
+  margin-top:16px;
+  background: rgba(220,53,69,.08);
+  border: 1px solid rgba(220,53,69,.3);
+  color:#7f1d1d;
+  border-radius:12px;
+  padding:18px;
+  display:flex; gap:10px; align-items:center; justify-content:center;
+}
+
+/* Select de periodo: reusar estilo base */
+.period-select-container .label{ color:#1f2937; }
+#period-select{
+  appearance: none; background:#fff; color:#333; font-weight:500;
+  padding:10px 36px 10px 14px; border:1.5px solid #ddd; border-radius:8px;
+  box-shadow:0 2px 6px rgba(0,0,0,.05);
+  background-image:url("data:image/svg+xml;charset=UTF-8,%3Csvg fill='%23666' height='20' viewBox='0 0 24 24' width='20' xmlns='http://www.w3.org/2000/svg'%3E<path d='M7 10l5 5 5-5z'/%3E%3C/svg%3E");
+  background-repeat:no-repeat; background-position:right 10px center; background-size:18px;
+}
+#period-select:hover{ border-color:#aaa; }
+#period-select:focus{ outline:none; border-color:var(--c1); box-shadow:0 0 0 3px rgba(16,149,201,.25); }
+
+/* Hacer que los gráficos ocupen todo el alto del contenedor */
+.card-vez canvas {
+  width: 100% !important;
+  height: 300px !important; /* puedes ajustar según lo que quieras */
+}
+
+
+.card-vez .subchart h4{
+  margin:0 0 6px;
+  color:#475569;
+  font-weight:600;
+  font-size:.95rem;
+}
+
+/* Estudiantes por periodo */
+#chartEstPorPeriodo{
+  width:100% !important;
+  height:300px !important;
+}
+
+/* Alturas controladas para que NUNCA crezcan infinito */
+.card canvas { 
+  display:block;
+  width: 100% !important;
+}
+
+/* alturas por gráfico */
+#chartNoVez { height: 360px !important; }
+#chartAprobReprob { height: 360px !important; }
+#chartEstPorPeriodo { height: 360px !important; }
+#chartHist { height: 540px !important; }
+
+/* si tienes esta regla, cámbiala por la de arriba o elimínala:
+.card-vez canvas { height: 100% !important; }  <-- QUITAR
+*/
+.card-vez {
+  display:flex;
+  flex-direction:column;
+}
+
+
+/* Impresión limpia y clara SIEMPRE */
+@media print {
+  @page { size: A4 portrait; margin: 12mm; }
+
+  /* 1) Forzar variables a claro aunque exista .dark-mode */
+  :root, .dark-mode{
+    --ink:#111827;
+    --muted:#475569;
+    --card-bg:#ffffff;
+  }
+
+  /* 2) Fondo y texto globales */
+  html, body {
+    background: #fff !important;
+    color: #111827 !important;
+    -webkit-print-color-adjust: exact;
+            print-color-adjust: exact;
+  }
+
+  /* 3) Tarjetas/encabezado SIEMPRE blancos */
+  .header, .card, .card-vez {
+    background: #fff !important;
+    box-shadow: none !important;
+    border: 1px solid #ddd !important;
+    break-inside: avoid;
+    page-break-inside: avoid;
+  }
+
+  .header { padding: 12px 14px; }
+  .title { margin: 0 0 4px; color:#111827 !important; }
+  .subtitle { margin: 0 0 8px; color:#475569 !important; }
+
+  /* 4) KPI y textos secundarios claros */
+  .kpi-label { color:#475569 !important; }
+  .kpi-value.small { color:#111827 !important; }
+  .kpi-icon{
+    background:#f3f4f6 !important;
+    color:#1e3a8a !important;
+    border:1px solid #cbd5e1 !important;
+  }
+
+  /* 5) Tablas claras y legibles (forzar texto negro) */
+  .table thead th{
+    background: #f3f4f6 !important;
+    color: #000 !important;               /* encabezados en negro */
+  }
+
+  .table th,
+  .table td{
+    color: #000 !important;                /* texto de celdas en negro */
+    border-bottom: 1px solid #000 !important;
+  }
+
+  /* Si tienes enlaces dentro de celdas y quieres que salgan negros también */
+  .table a { color: #000 !important; }
+
+  /* 6) Canvas (gráficos) con fondo blanco */
+  canvas{ background:#fff !important; }
+
+  /* 7) Ocultar controles */
+  .actions, .period-select-container { display: none !important; }
+
+  /* 8) Grid más denso para que quepa */
+  .cards, .cards-vez { grid-template-columns: repeat(3, 1fr); gap: 10px; }
+  .grid  { grid-template-columns: 1fr 1fr; gap: 10px; }
+  .card.wide { grid-column: 1 / -1; }
+
+  /* 9) Tablas compactas */
+  .table th, .table td { padding: 6px 8px; font-size: 12px; }
+}

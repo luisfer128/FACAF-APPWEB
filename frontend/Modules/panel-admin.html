@@ -1,0 +1,254 @@
+<!doctype html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8"/>
+  <meta name="viewport" content="width=device-width,initial-scale=1.0"/>
+  <title>Panel de Administración</title>
+
+  <!-- Misma hoja de estilos que Configuración -->
+  <link rel="stylesheet" href="/styles/config.css">
+  <link rel="stylesheet" href="/styles/panel-admin.css">
+
+  <!-- Iconos -->
+  <link rel="stylesheet"
+        href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.2/css/all.min.css"
+        referrerpolicy="no-referrer"/>
+
+  <!-- Preload de tema (igual a config.html) -->
+  <script>
+    (function () {
+      var theme = localStorage.getItem('theme') || 'light';
+      var root = document.documentElement;
+      if (theme === 'dark') root.classList.add('dark-mode');
+      root.classList.add('no-theme-transitions');
+    })();
+  </script>
+
+</head>
+
+<!-- Modal genérico -->
+<div id="modal-backdrop" class="deny-backdrop" role="dialog" aria-modal="true" aria-labelledby="modal-title" style="display:none;">
+  <div class="deny-card" style="max-width:560px;">
+    <div class="icon" id="modal-icon" style="display:none;"><i class="fa-solid fa-circle-info"></i></div>
+    <h3 id="modal-title">Título</h3>
+    <p id="modal-message">Mensaje…</p>
+    <div style="display:flex; gap:10px; justify-content:center; margin-top:16px;">
+      <button id="modal-cancel" class="secondary-button action-button" style="display:none;">Cancelar</button>
+      <button id="modal-accept" class="action-button">Aceptar</button>
+    </div>
+  </div>
+</div>
+
+<!-- Overlay de carga (igual patrón global) -->
+<div id="loading-overlay" class="loading-overlay" style="display:none;">
+  <div class="loading-spinner">
+    <i class="fas fa-spinner fa-spin"></i> Procesando datos...
+  </div>
+</div>
+
+<!-- Modal Acceso Denegado -->
+<div id="deny-backdrop" class="deny-backdrop" role="dialog" aria-modal="true" aria-labelledby="deny-title">
+  <div class="deny-card">
+    <div class="icon"><i class="fa-solid fa-triangle-exclamation"></i></div>
+    <h3 id="deny-title">NO TIENE PERMISOS PARA ENTRAR A ESTE MODULO</h3>
+    <p>Esta sección es exclusiva para administradores.</p>
+    <button id="deny-close" class="action-button"><i class="fa-solid fa-arrow-left"></i> Volver al inicio</button>
+  </div>
+</div>
+
+<body>
+  <!-- Contenedor oculto hasta validar rol -->
+  <div class="container" style="display:none;">
+    <h2>Administración</h2>
+
+    <!-- Barra superior -->
+    <div class="admin-toolbar">
+      <button id="goToMenuButton" class="action-button secondary-button">
+        <i class="fa-solid fa-arrow-left"></i> Ir a Menú
+      </button>
+      <button id="refreshUsersBtn" class="action-button">
+        <i class="fa-solid fa-rotate"></i> Actualizar lista
+      </button>
+    </div>
+
+    <!-- Métricas rápidas -->
+    <div class="stats">
+      <div class="stat-card">
+        <i class="fa-solid fa-users"></i>
+        <div>
+          <h4>Total usuarios</h4>
+          <div class="stat-value" id="stat-total">0</div>
+        </div>
+      </div>
+      <div class="stat-card">
+        <i class="fa-solid fa-user-shield"></i>
+        <div>
+          <h4>Admins</h4>
+          <div class="stat-value" id="stat-admins">0</div>
+        </div>
+      </div>
+      <div class="stat-card">
+        <i class="fa-solid fa-toggle-on"></i>
+        <div>
+          <h4>Activos</h4>
+          <div class="stat-value" id="stat-activos">0</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Alta / edición de usuario -->
+    <div class="config-section">
+      <h3>Gestión de Usuarios</h3>
+      <p>Crear nuevos usuarios o actualizar su rol y estado.</p>
+
+      <div class="form-grid">
+        <div class="form-field">
+          <label for="usuario-input">Usuario</label>
+          <input id="usuario-input" type="text" placeholder="usuario@dominio.com / identificador">
+        </div>
+        <div class="form-field">
+          <label for="rol-select">Rol</label>
+          <select id="rol-select">
+            <option value="usuario">usuario</option>
+            <option value="admin">admin</option>
+          </select>
+        </div>
+        <div class="form-field">
+          <label for="activo-check">Activo</label>
+          <div style="display:flex;align-items:center;gap:8px;">
+            <input id="activo-check" type="checkbox" checked>
+            <span id="activo-label">Sí</span>
+          </div>
+        </div>
+        <div class="form-field" style="align-self:end;">
+          <button id="createUserBtn" class="action-button">
+            <i class="fa-solid fa-user-plus"></i> Crear usuario
+          </button>
+        </div>
+      </div>
+
+      <div class="admin-toolbar" style="margin-top:6px;">
+        <button id="updateUserBtn" class="action-button secondary-button" disabled>
+          <i class="fa-solid fa-user-pen"></i> Actualizar seleccionado
+        </button>
+        <button id="clearFormBtn" class="action-button secondary-button">
+          <i class="fa-solid fa-eraser"></i> Limpiar formulario
+        </button>
+      </div>
+    </div>
+
+    <!-- Filtros -->
+    <div class="config-section">
+      <h3>Buscar y Filtrar</h3>
+      <div class="filters">
+        <div class="filter-field">
+          <label for="searchText">Buscar por usuario</label>
+          <input id="searchText" type="text" placeholder="Escribe parte del usuario...">
+        </div>
+        <div class="filter-field">
+          <label for="filterRol">Rol</label>
+          <select id="filterRol">
+            <option value="">Todos</option>
+            <option value="admin">admin</option>
+            <option value="usuario">usuario</option>
+          </select>
+        </div>
+        <div class="filter-field">
+          <label for="filterActivo">Estado</label>
+          <select id="filterActivo">
+            <option value="">Todos</option>
+            <option value="1">Activos</option>
+            <option value="0">Inactivos</option>
+          </select>
+        </div>
+      </div>
+      <div class="admin-toolbar" style="margin-top:10px;">
+        <button id="applyFiltersBtn" class="action-button">
+          <i class="fa-solid fa-filter"></i> Aplicar filtros
+        </button>
+        <button id="resetFiltersBtn" class="action-button secondary-button">
+          <i class="fa-solid fa-rotate-left"></i> Restablecer
+        </button>
+      </div>
+    </div>
+
+    <!-- Tabla -->
+    <div class="config-section">
+      <h3>Listado de Usuarios</h3>
+      <div class="admin-table-wrap">
+        <table class="admin-table" id="usersTable">
+          <thead>
+            <tr>
+              <th style="width:80px;">ID</th>
+              <th>Usuario</th>
+              <th style="width:140px;">Rol</th>
+              <th style="width:120px;">Activo</th>
+              <th style="width:220px;">Acciones</th>
+            </tr>
+          </thead>
+          <tbody id="usersTbody">
+            <!-- Filas dinámicas -->
+          </tbody>
+        </table>
+      </div>
+      <div class="centered-button">
+        <button id="loadMoreBtn" class="secondary-button action-button">
+          <i class="fa-solid fa-angles-down"></i> Cargar más
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Guardia de rol y carga condicional del módulo -->
+  <script type="module">
+    import { ensureSessionGuard } from '../auth-session.js';
+    import { loadData } from '../indexeddb-storage.js';
+
+    (async () => {
+      // 1) Guardia de sesión
+      const ok = await ensureSessionGuard();
+      if (!ok) return; // el guard redirige al login si está vencida
+
+      // 2) Leer rol desde userData (formato { usuario: { rol }, ... } o { rol })
+      const userData = (await loadData('userData')) || {};
+      const role = String((userData?.usuario?.rol ?? userData?.rol ?? '')).trim().toLowerCase();
+
+      const container = document.querySelector('.container');
+      const backdrop = document.getElementById('deny-backdrop');
+      const closeBtn = document.getElementById('deny-close');
+
+      // 3) Si NO es admin -> mostrar modal y salir; al cerrar, volver al index
+      if (role !== 'admin') {
+        backdrop.classList.add('show');
+        closeBtn.addEventListener('click', () => {
+          window.location.href = '../index.html';
+        }, { once: true });
+        return;
+      }
+
+      // 4) Es admin -> mostrar contenido y cargar lógica del panel
+      container.style.display = 'block';
+
+      // Botón "Ir a Menú"
+      document.getElementById('goToMenuButton')?.addEventListener('click', () => {
+        window.location.href = '../index.html';
+      });
+
+      // Etiqueta Sí/No del checkbox activo
+      const activoCheck = document.getElementById('activo-check');
+      const activoLabel = document.getElementById('activo-label');
+      activoCheck?.addEventListener('change', () => {
+        activoLabel.textContent = activoCheck.checked ? 'Sí' : 'No';
+      });
+
+      // Quitar transición bloqueada cuando ya montó el DOM
+      requestAnimationFrame(() => {
+        document.documentElement.classList.remove('no-theme-transitions');
+      });
+
+      // 5) Cargar el módulo solo para admins
+      await import('./panel-admin.js');
+    })();
+  </script>
+</body>
+</html>

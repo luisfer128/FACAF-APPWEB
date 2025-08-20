@@ -1,0 +1,308 @@
+/* Reset y base */
+* {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+}
+
+body {
+  font-family: 'Segoe UI', Arial, sans-serif;
+  background: linear-gradient(to right, #0ea5e9, #1d4ed8);
+  color: #000;
+  line-height: 1.5;
+}
+
+/* Contenedor principal */
+.container, .container {
+  padding: 20px;
+  background: linear-gradient(120deg, #e6eef6 0%, #ffffff 100%);
+  border-radius: 8px;
+  max-width: 1200px;
+  margin-left: auto;
+  margin-right: auto;
+  margin-top: 30px;
+  margin-bottom: 0;
+  position: relative;
+  top: 0;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+}
+
+/* Animación suave */
+@keyframes fadeIn {
+  from { opacity: 0; transform: translateY(10px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+/* Encabezado */
+.header {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: 15px;
+  border-bottom: 2px solid #e2e8f0;
+  padding-bottom: 15px;
+  margin-bottom: 20px;
+}
+
+.title {
+  flex: 1 1 100%;
+  text-align: center;
+  font-size: 26px;
+  font-weight: bold;
+  color: #1e40af;
+}
+
+.period-label {
+  font-weight: bold;
+  color: #475569;
+}
+
+.total-students {
+  font-weight: bold;
+  color: #1e3a8a;
+  background: #e0f2fe;
+  padding: 6px 14px;
+  border-radius: 20px;
+  font-size: 14px;
+  border: 2px solid #1d4ed8;
+}
+
+/* Filtro */
+.filter-section {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.filter-section label {
+  font-weight: 500;
+}
+
+#filterAcademicInput {
+  padding: 8px 12px;
+  border: 1px solid #cbd5e1;
+  border-radius: 6px;
+  font-size: 14px;
+  width: 220px;
+  transition: all 0.2s ease;
+}
+
+#filterAcademicInput:focus {
+  outline: none;
+  border-color: #2563eb;
+  box-shadow: 0 0 6px rgba(37, 99, 235, 0.4);
+}
+
+/* Botones */
+.button-group {
+  display: flex;
+  gap: 10px;
+}
+
+.action-button {
+  padding: 8px 16px;
+  border: none;
+  border-radius: 6px;
+  font-size: 14px;
+  cursor: pointer;
+  background: #2563eb;
+  color: #fff;
+  font-weight: 500;
+  transition: background 0.25s ease, transform 0.2s ease;
+}
+
+.action-button:hover {
+  background: #1e40af;
+  transform: translateY(-1px);
+}
+
+.secondary-button {
+  background: #e2e8f0;
+  color: #1e293b;
+}
+
+.secondary-button:hover {
+  background: #cbd5e1;
+}
+
+/* Tabla */
+#academic-tracking-table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 13px;
+  overflow: hidden;
+  border-radius: 8px;
+}
+
+#academic-tracking-table thead {
+  background: #1e40af;
+  color: white;
+}
+
+#academic-tracking-table th,
+#academic-tracking-table td {
+  padding: 10px;
+  border-bottom: 1px solid #e2e8f0;
+  text-align: center;
+  vertical-align: middle;
+}
+
+#academic-tracking-table tbody tr:nth-child(even) {
+  background: #f8fafc;
+}
+
+#academic-tracking-table tbody tr:hover {
+  background: #e0f2fe;
+  transition: background 0.2s ease;
+}
+
+/* Checkbox */
+td input[type="checkbox"] {
+  transform: scale(1.2);
+  cursor: pointer;
+}
+
+/* Indicador de riesgo */
+.riesgo-bar {
+  background-color: #dc2626;
+  color: white;
+  padding: 3px 6px;
+  border-radius: 4px;
+  font-weight: bold;
+}
+
+/* Listas dentro de las celdas */
+td ul {
+  list-style: disc;
+  padding-left: 18px; /* espacio para el bullet */
+  margin: 0;
+}
+
+td li {
+  margin-bottom: 4px;
+  padding-left: 0;
+  position: relative;
+}
+
+td li::before {
+  content: none; /* eliminar el guion personalizado */
+}
+
+.container {
+  position: absolute;
+  left: 50px;
+  right: 50px;
+  margin-top: 30px;
+  margin-bottom: 30px;
+  max-width: calc(100vw - 100px);
+}
+
+/* ===== Modo oscuro (sin tocar el diseño) ===== */
+html.dark-mode body,
+body.dark-mode {
+  background: linear-gradient(to right, #0b1220, #0b1220);
+  color: #e5e7eb;
+}
+
+/* Contenedor */
+.dark-mode .container {
+  background: #111827;
+  border: 1px solid #1f2937;
+  box-shadow: 0 10px 28px rgba(0,0,0,.35);
+}
+
+/* Encabezado */
+.dark-mode .header { border-bottom: 2px solid #1f2937; }
+.dark-mode .title { color: #93c5fd; }
+.dark-mode .period-label { color: #9ca3af; }
+.dark-mode .total-students {
+  color: #93c5fd;
+  background: rgba(59,130,246,.15);
+}
+
+/* Filtro */
+.dark-mode .filter-section label { color: #e5e7eb; }
+.dark-mode #filterAcademicInput {
+  background: #0b1220;
+  color: #e5e7eb;
+  border: 1px solid #334155;
+  box-shadow: none;
+}
+.dark-mode #filterAcademicInput:focus {
+  border-color: #2563eb;
+  box-shadow: 0 0 0 3px rgba(37,99,235,.25);
+}
+
+/* Botones */
+.dark-mode .action-button { background: #2563eb; color: #fff; }
+.dark-mode .action-button:hover { background: #1e3a8a; }
+.dark-mode .secondary-button { background: #374151; color: #e5e7eb; }
+.dark-mode .secondary-button:hover { background: #4b5563; }
+
+/* Tabla */
+.dark-mode #academic-tracking-table thead {
+  background: #0f172a;
+  color: #e5e7eb;
+}
+.dark-mode #academic-tracking-table th,
+.dark-mode #academic-tracking-table td {
+  color: #e5e7eb;
+  border-bottom: 1px solid #1f2937;
+}
+.dark-mode #academic-tracking-table tbody tr:nth-child(even) { background: #0f172a; }
+.dark-mode #academic-tracking-table tbody tr:hover { background: rgba(96,165,250,.12); }
+
+/* Enlaces dentro de celdas (si hay) */
+.dark-mode #academic-tracking-table a { color: #93c5fd; }
+
+/* ===== Badges de conteo (claro por defecto) ===== */
+:root{
+  --skull-ink: #111827;    /* negro/gris muy oscuro */
+  --warn-ink:  goldenrod;  /* igual a tu inline original */
+}
+
+.dark-mode{
+  --skull-ink: #e5e7eb;    /* texto claro en oscuro */
+  --warn-ink:  #fbbf24;    /* amarillo legible en oscuro */
+}
+
+.count-badge{
+  cursor: pointer;
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  line-height: 1;
+  user-select: none;
+  transition: color .2s ease, opacity .2s ease;
+}
+
+.count-badge--skull{ color: var(--skull-ink); }
+.count-badge--warn { color: var(--warn-ink); }
+
+.count-badge:hover{ opacity: .9; }
+.count-badge strong{ font-weight: 700; }
+
+
+/* Responsive */
+@media (max-width: 768px) {
+  .header {
+    flex-direction: column;
+    align-items: stretch;
+    text-align: center;
+  }
+
+  .filter-section {
+    justify-content: center;
+    width: 100%;
+  }
+
+  #filterAcademicInput {
+    width: 100%;
+  }
+
+  .button-group {
+    justify-content: center;
+    flex-wrap: wrap;
+  }
+}

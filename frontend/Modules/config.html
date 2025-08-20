@@ -1,0 +1,95 @@
+<!doctype html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Configuración</title>
+  <link href='/styles/config.css' rel='stylesheet'>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+  <script src="https://cdn.sheetjs.com/xlsx-latest/package/dist/xlsx.full.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+  <script>
+    (function () {
+      var theme = localStorage.getItem('theme') || 'light';
+      var root = document.documentElement;
+      if (theme === 'dark') root.classList.add('dark-mode');
+      root.classList.add('no-theme-transitions');
+    })();
+  </script>
+</head>
+<div id="loading-overlay" class="loading-overlay" style="display: none;">
+  <div class="loading-spinner">
+    <i class="fas fa-spinner fa-spin"></i> Procesando datos...
+  </div>
+</div>
+<body>
+  <div class="container">
+    <h2>Configuración</h2>
+
+    <div class="period-select-container">
+      <label for="period-select"><strong>Seleccionar Periodo:</strong></label>
+      <select id="period-select"></select>
+      <button id="goToMenuButton" class="action-button secondary-button">Ir a Menú</button>
+    </div>
+
+    <!-- Archivos procesados -->
+    <div class="config-section">
+        <div id="processed-files-list"></div>
+    </div>
+
+    <!-- Carga de Excel -->
+    <div class="config-section">
+        <div class="section-title-row">
+        <h3 class="section-title">
+          Carga de Archivos Excel
+          <button
+            type="button"
+            class="info-badge info-badge--sm"
+            aria-label="Ayuda sobre carga de archivos"
+            data-tooltip="Al momento de subir REPORTE_RECORD_CALIFICACIONES_POR_PARCIAL_TOTAL asegurarse que al unir el nuevo parcial las columnas COD_GRUPO y MODALIDAD esten eliminadas"
+          >i</button>
+        </h3>
+      </div>
+        <div class="file-upload-area">
+            <input type="file" id="excel-file-input" accept=".xlsx" multiple>
+            <label for="excel-file-input" class="upload-button">Seleccionar Archivo(s) Excel</label>
+            <span id="selected-files-text">Ningún archivo seleccionado</span>
+        </div>
+
+        <div class="centered-button">
+            <button id="process-files-button">Procesar Archivo(s)</button>   
+        </div>
+    </div>
+
+    <!-- Plantillas de correo -->
+    <div class="config-section">
+        <h3>Plantillas de Correo</h3>
+        <p>Palabras claves: {nombre_docente}, {detalle_estudiantes}, {nombre_estudiante}, {detalle_materias}, {detalle_docentes}, {detalle_docentes_estudiantes}</p>
+        <div class="email-templates-area">
+            <div class="template-box">
+                <h4>Correo para Autoridad:</h4>
+                <textarea id="template-autoridad" rows="10" cols="50"></textarea>
+            </div>
+            <div class="template-box">
+                <h4>Correo para Docente:</h4>
+                <textarea id="template-docente" rows="10" cols="50"></textarea>
+            </div>
+            <div class="template-box">
+                <h4>Correo para Estudiante:</h4>
+                <textarea id="template-estudiante" rows="10" cols="50"></textarea>
+            </div>
+        </div>
+        <button id="save-templates-button">Guardar Plantillas</button>
+    </div>
+  </div>
+
+  <script defer type="module" src="./config.js"></script>
+  <script>
+      window.addEventListener('DOMContentLoaded', function () {
+        requestAnimationFrame(function () {
+          document.documentElement.classList.remove('no-theme-transitions');
+        });
+      });
+  </script>
+</body>
+</html>

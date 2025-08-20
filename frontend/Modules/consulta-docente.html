@@ -1,0 +1,68 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8" />
+  <meta
+    name="viewport"
+    content="width=device-width, initial-scale=1, viewport-fit=cover"
+  />
+  <title>Consulta Docente</title>
+
+  <!-- CSS principal -->
+  <link rel="stylesheet" href="../styles/consulta-docente.css" />
+
+  <!-- Chart.js (solo si lo usas en este módulo) -->
+  <script src="https://cdn.jsdelivr.net/npm/chart.js" defer></script>
+  <script>
+    (function () {
+      var theme = localStorage.getItem('theme') || 'light';
+      var root = document.documentElement;
+      if (theme === 'dark') root.classList.add('dark-mode');
+      root.classList.add('no-theme-transitions');
+    })();
+  </script>
+</head>
+<body>
+  <main class="module-container">
+    <header class="module-header">
+      <h1>Consulta Docente</h1>
+      <p class="module-description">Revisión de historial académico por docente</p>
+      <button id="goToMenuButton" class="action-button secondary-button" type="button" aria-label="Ir a Apps">
+        Ir a Menú
+      </button>
+    </header>
+
+    <section class="filter-bar" aria-label="Filtro de docente">
+      <label for="docenteFilter"><strong>Filtrar:</strong></label>
+      <input
+        type="text"
+        id="docenteFilter"
+        placeholder="Cédula o nombre del docente"
+        autocomplete="off"
+        inputmode="search"
+        aria-describedby="docenteFilterHelp"
+      />
+      <button id="searchButton" type="button" class="action-button secondary-button" aria-label="Buscar">
+        🔍 Buscar
+      </button>
+    </section>
+
+    <!-- Top 10 Reprobados (Global y por período) -->
+    <section id="top10ReprobadosContainer" aria-label="Top 10 de reprobados"></section>
+  </main>
+
+  <noscript>
+    <p>Activa JavaScript para usar este módulo.</p>
+  </noscript>
+
+  <!-- Tu módulo JS -->
+  <script type="module" src="consulta-docente.js"></script>
+  <script>
+      window.addEventListener('DOMContentLoaded', function () {
+        requestAnimationFrame(function () {
+          document.documentElement.classList.remove('no-theme-transitions');
+        });
+      });
+  </script>
+</body>
+</html>

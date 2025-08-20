@@ -1,0 +1,31 @@
+version: "3.9"
+services:
+  db:
+    image: mcr.microsoft.com/mssql/server:2019-latest
+    container_name: sqlserver
+    environment:
+      SA_PASSWORD: "FACAF@DB2025@"
+      ACCEPT_EULA: "Y"
+    ports:
+      - "1433:1433"
+
+  backend:
+    build: ./backend
+    container_name: backend_app
+    depends_on:
+      - db
+    env_file:
+      - ./backend/archivos/.env
+    ports:
+      - "5000:5000"
+
+  frontend:
+    build: ./frontend
+    container_name: frontend_app
+    depends_on:
+      - backend
+    ports:
+      - "80:80"
+
+volumes:
+  sql_data:
