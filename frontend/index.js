@@ -2,7 +2,7 @@
 import { loadData, saveData, removeData } from './indexeddb-storage.js';
 import { ensureSessionGuard, scheduleAutoLogout } from './auth-session.js';
 
-const API_BASE = 'http://localhost:5000';
+const API_BASE = 'http://0.0.0.0:5000';
 
 let __roleReloading = false; // evita continuar flujo si vamos a recargar
 

@@ -1,7 +1,7 @@
 // login.js
 import { saveData } from './indexeddb-storage.js';
 
-const API_BASE = 'http://localhost:5000';
+const API_BASE = 'http://0.0.0.0:5000';
 
 document.addEventListener('DOMContentLoaded', () => {
   const loginForm = document.getElementById('login-form');

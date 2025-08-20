@@ -1,7 +1,7 @@
 // config.js
 import { saveData, loadData } from '../indexeddb-storage.js';
 
-const API_BASE = 'http://localhost:5000';
+const API_BASE = 'http://0.0.0.0:5000';
 
 const norm = (v) => (v ?? '').toString().trim();
 function normalizeFileName(fileName) {
