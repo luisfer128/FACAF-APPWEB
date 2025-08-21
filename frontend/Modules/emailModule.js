@@ -1,7 +1,18 @@
 // emailModule.js
 import { loadData } from '../indexeddb-storage.js';
 
-const EMAIL_AUTORIDADES = "luis.baldeons@ug.edu.ec";
+const API_BASE = 'http://178.128.10.70:5000';
+let AUTORIDAD = "alvaro.espinozabu@ug.edu.ec"; // valor por defecto
+
+async function initAutoridad() {
+  const local = await loadData('emailTemplates');
+  if (local && local.autoridad) {
+    AUTORIDAD = local.autoridad;
+  }
+  return AUTORIDAD;
+}
+
+const EMAIL_AUTORIDADES = initAutoridad();
 
 /* =========================
    Helpers
@@ -69,7 +80,7 @@ function extractDocenteCorreoByIdMap(docentesExcel) {
 // POST real al backend Flask (con logging a consola)
 async function enviarCorreo(para, contenido) {
   try {
-    const response = await fetch("http://192.168.100.206:5000/send-email", {
+    const response = await fetch(`${API_BASE}/send-email`, {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({

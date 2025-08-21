@@ -53,14 +53,256 @@ document.addEventListener('DOMContentLoaded', async () => {
     if (materiaExcluida(r.MATERIA)) return false;
 
     const d = parseDocente(r.DOCENTE);
-    if (!d) return false;                   // descarta “REAJUSTE…”, “CONVALID…” etc.
+    if (!d) return false;                   // descarta "REAJUSTE…", "CONVALID…" etc.
     if (d.canonNombre === 'MOVILIDAD') return false;
 
     if (!norm(r.PERIODO) || !norm(r.MATERIA)) return false;
     return true;
   });
 
-  /* ========= Sección de “Top” y gráficos generales ========= */
+  /* ========= AUTOCOMPLETADO - Preparar lista de docentes únicos ========= */
+  const docentesUnicos = new Map();
+  dataFiltrada.forEach(r => {
+    const parsed = parseDocente(r.DOCENTE);
+    if (parsed) {
+      const key = `${parsed.id}-${parsed.nombre}`;
+      if (!docentesUnicos.has(key)) {
+        docentesUnicos.set(key, {
+          id: parsed.id,
+          nombre: parsed.nombre,
+          canonNombre: parsed.canonNombre,
+          full: parsed.full
+        });
+      }
+    }
+  });
+  const listaDocentes = Array.from(docentesUnicos.values())
+    .sort((a, b) => a.nombre.localeCompare(b.nombre));
+
+  /* ========= CREAR DROPDOWN AUTOCOMPLETADO ========= */
+  function createAutocompleteDropdown() {
+    // Crear contenedor del dropdown si no existe
+    let dropdown = document.getElementById('docenteDropdown');
+    if (!dropdown) {
+      dropdown = document.createElement('div');
+      dropdown.id = 'docenteDropdown';   
+      // Posicionar el input como relativo si no lo está
+      const inputContainer = docenteFilterInput.parentElement;
+      if (getComputedStyle(inputContainer).position === 'static') {
+        inputContainer.style.position = 'relative';
+      }
+      inputContainer.appendChild(dropdown);
+    }
+    return dropdown;
+  }
+
+  const dropdown = createAutocompleteDropdown();
+
+  function showDropdown(filteredDocentes) {
+    // Limpiar contenido previo pero mantener el style
+    const existingStyle = dropdown.querySelector('style');
+    dropdown.innerHTML = '';
+    if (existingStyle) dropdown.appendChild(existingStyle);
+    
+    if (filteredDocentes.length === 0) {
+      dropdown.style.display = 'none';
+      return;
+    }
+
+    filteredDocentes.slice(0, 10).forEach((docente, index) => {
+      const item = document.createElement('div');
+      item.className = 'dropdown-item';
+      item.style.cssText = `
+        padding: 12px 16px;
+        cursor: pointer;
+        border-bottom: 1px solid var(--border);
+        font-size: 14px;
+        transition: all 0.15s ease;
+        color: var(--text);
+        background: transparent;
+      `;
+      
+      // Remover borde del último item
+      if (index === filteredDocentes.slice(0, 10).length - 1) {
+        item.style.borderBottom = 'none';
+      }
+      
+      item.innerHTML = `
+        <div style="font-weight: 600; margin-bottom: 2px; line-height: 1.3;">${docente.nombre}</div>
+        <div class="item-id" style="font-size: 12px; color: var(--muted); opacity: 0.9; line-height: 1.2;">ID: ${docente.id}</div>
+      `;
+
+      // Hover effect
+      item.addEventListener('mouseenter', () => {
+        item.style.backgroundColor = 'color-mix(in srgb, var(--accent) 12%, transparent)';
+        // No cambiar el color del texto en hover, mantener el color por defecto
+      });
+      
+      item.addEventListener('mouseleave', () => {
+        if (!item.classList.contains('selected')) {
+          // Simplemente resetear el background, los colores se manejan por CSS
+          item.style.backgroundColor = 'transparent';
+          // No tocar los colores de texto, dejar que CSS los maneje
+        }
+      });
+
+      // Click para seleccionar
+      item.addEventListener('click', () => {
+        docenteFilterInput.value = docente.nombre;
+        hideDropdown();
+        onSearch();
+      });
+
+      dropdown.appendChild(item);
+    });
+
+    dropdown.style.display = 'block';
+  }
+
+  function hideDropdown() {
+    dropdown.style.display = 'none';
+  }
+
+  function filterDocentes(query) {
+    if (!query || query.length < 2) return [];
+    
+    const queryCanon = canon(query);
+    return listaDocentes.filter(docente => {
+      // Buscar por ID (exacto) o por nombre (contiene)
+      return docente.id.includes(query.trim()) || 
+             docente.canonNombre.includes(queryCanon);
+    });
+  }
+
+  /* ========= Eventos del autocompletado ========= */
+  docenteFilterInput?.addEventListener('input', (e) => {
+    const query = e.target.value;
+    if (query.length < 2) {
+      hideDropdown();
+      return;
+    }
+    
+    const filtered = filterDocentes(query);
+    showDropdown(filtered);
+  });
+
+  docenteFilterInput?.addEventListener('blur', (e) => {
+    // Delay para permitir click en dropdown
+    setTimeout(() => {
+      hideDropdown();
+    }, 200);
+  });
+
+  docenteFilterInput?.addEventListener('focus', (e) => {
+    const query = e.target.value;
+    if (query.length >= 2) {
+      const filtered = filterDocentes(query);
+      showDropdown(filtered);
+    }
+  });
+
+  // Navegación con teclado
+  docenteFilterInput?.addEventListener('keydown', (e) => {
+    const items = dropdown.querySelectorAll('.dropdown-item');
+    let currentSelected = dropdown.querySelector('.selected');
+    
+    if (e.key === 'ArrowDown') {
+      e.preventDefault();
+      if (!currentSelected) {
+        if (items.length > 0) {
+          items[0].classList.add('selected');
+          items[0].style.backgroundColor = 'var(--accent, #3b82f6)';
+          items[0].style.color = 'var(--accent-foreground, white)';
+          const idEl = items[0].querySelector('.item-id');
+          if (idEl) idEl.style.color = 'rgba(255,255,255,0.9)';
+        }
+      } else {
+        // Remover selección actual
+        currentSelected.classList.remove('selected');
+        currentSelected.style.backgroundColor = '';
+        // Detectar modo oscuro para aplicar color correcto
+        const isDark = window.matchMedia('(prefers-color-scheme: dark)').matches || 
+                      document.body.classList.contains('dark') || 
+                      document.documentElement.getAttribute('data-theme') === 'dark';
+        
+        currentSelected.style.color = isDark ? 'var(--foreground, #e2e8f0)' : 'var(--foreground, #0f172a)';
+        const currentIdEl = currentSelected.querySelector('.item-id');
+        if (currentIdEl) {
+          currentIdEl.style.color = isDark ? 'var(--muted-foreground, #94a3b8)' : 'var(--muted-foreground, #64748b)';
+        }
+        
+        // Seleccionar siguiente
+        const nextIndex = Array.from(items).indexOf(currentSelected) + 1;
+        const nextItem = nextIndex < items.length ? items[nextIndex] : items[0];
+        nextItem.classList.add('selected');
+        nextItem.style.backgroundColor = 'var(--accent, #3b82f6)';
+        nextItem.style.color = 'var(--accent-foreground, white)';
+        const nextIdEl = nextItem.querySelector('.item-id');
+        if (nextIdEl) nextIdEl.style.color = 'rgba(255,255,255,0.9)';
+        
+        // Scroll automático si es necesario
+        nextItem.scrollIntoView({ block: 'nearest', behavior: 'smooth' });
+      }
+    } else if (e.key === 'ArrowUp') {
+      e.preventDefault();
+      if (!currentSelected) {
+        if (items.length > 0) {
+          const lastItem = items[items.length - 1];
+          lastItem.classList.add('selected');
+          lastItem.style.backgroundColor = 'var(--accent, #3b82f6)';
+          lastItem.style.color = 'var(--accent-foreground, white)';
+          const idEl = lastItem.querySelector('.item-id');
+          if (idEl) idEl.style.color = 'rgba(255,255,255,0.9)';
+          lastItem.scrollIntoView({ block: 'nearest', behavior: 'smooth' });
+        }
+      } else {
+        // Remover selección actual
+        currentSelected.classList.remove('selected');
+        currentSelected.style.backgroundColor = '';
+        // Detectar modo oscuro para aplicar color correcto
+        const isDarkUp = window.matchMedia('(prefers-color-scheme: dark)').matches || 
+                        document.body.classList.contains('dark') || 
+                        document.documentElement.getAttribute('data-theme') === 'dark';
+        
+        currentSelected.style.color = isDarkUp ? 'var(--foreground, #e2e8f0)' : 'var(--foreground, #0f172a)';
+        const currentIdEl = currentSelected.querySelector('.item-id');
+        if (currentIdEl) {
+          currentIdEl.style.color = isDarkUp ? 'var(--muted-foreground, #94a3b8)' : 'var(--muted-foreground, #64748b)';
+        }
+        
+        // Seleccionar anterior
+        const prevIndex = Array.from(items).indexOf(currentSelected) - 1;
+        const prevItem = prevIndex >= 0 ? items[prevIndex] : items[items.length - 1];
+        prevItem.classList.add('selected');
+        prevItem.style.backgroundColor = 'var(--accent, #3b82f6)';
+        prevItem.style.color = 'var(--accent-foreground, white)';
+        const prevIdEl = prevItem.querySelector('.item-id');
+        if (prevIdEl) prevIdEl.style.color = 'rgba(255,255,255,0.9)';
+        
+        // Scroll automático si es necesario
+        prevItem.scrollIntoView({ block: 'nearest', behavior: 'smooth' });
+      }
+    } else if (e.key === 'Enter') {
+      e.preventDefault();
+      if (currentSelected) {
+        currentSelected.click();
+      } else {
+        onSearch();
+      }
+    } else if (e.key === 'Escape') {
+      hideDropdown();
+      docenteFilterInput.blur();
+    }
+  });
+
+  // Cerrar dropdown al hacer click fuera
+  document.addEventListener('click', (e) => {
+    if (!docenteFilterInput.contains(e.target) && !dropdown.contains(e.target)) {
+      hideDropdown();
+    }
+  });
+
+  /* ========= Sección de "Top" y gráficos generales ========= */
   let hostTop = document.getElementById('top10ReprobadosContainer');
   if (!hostTop) {
     hostTop = document.createElement('section');
@@ -170,7 +412,6 @@ document.addEventListener('DOMContentLoaded', async () => {
         tooltip: {
           callbacks: {
             title: (items) => items?.[0]?.label ?? '',
-            // ⬇️ Eliminado el beforeBody que rompía
             label: (ctx) => {
               const val = typeof ctx.parsed?.x === 'number' ? ctx.parsed.x : ctx.parsed;
               return `${ctx.dataset.label}: ${val.toFixed(2)}%`;
@@ -496,7 +737,7 @@ document.addEventListener('DOMContentLoaded', async () => {
 
     if (rows.length === 0) {
       histTitle.textContent = `Historial del Docente — (sin coincidencias)`;
-      tableWrap.innerHTML = `<p class="muted">No se encontraron registros para “${query}”.</p>`;
+      tableWrap.innerHTML = `<p class="muted">No se encontraron registros para "${query}".</p>`;
       return;
     }
 
@@ -538,14 +779,33 @@ document.addEventListener('DOMContentLoaded', async () => {
     });
 
     const periodosOrdenados = Object.keys(per)
-      .map(p => {
-        const ap = per[p].ap;
-        const rp = per[p].rp;
-        const tot = ap + rp;
-        const pctAp = tot ? (ap / tot) * 100 : 0;
-        return { periodo: p, ap, rp, tot, pctAp };
-      })
-      .sort((a, b) => b.pctAp - a.pctAp); // mayor % aprobación primero
+  .map(p => {
+    const ap = per[p].ap;
+    const rp = per[p].rp;
+    const tot = ap + rp;
+    const pctAp = tot ? (ap / tot) * 100 : 0;
+    return { periodo: p, ap, rp, tot, pctAp };
+  })
+  .sort((a, b) => {
+    // Ordenar por período cronológicamente (más reciente primero)
+    // Asumiendo formato "YYYY - YYYY CI" o similar
+    const extractYear = (periodo) => {
+      const match = periodo.match(/(\d{4})/);
+      return match ? parseInt(match[1]) : 0;
+    };
+    
+    const yearA = extractYear(a.periodo);
+    const yearB = extractYear(b.periodo);
+    
+    // Si los años son diferentes, ordenar por año descendente
+    if (yearA !== yearB) {
+      return yearB - yearA;
+    }
+    
+    // Si los años son iguales, ordenar alfabéticamente descendente
+    // Esto manejará casos como "2024 - 2025 CI" vs "2024 - 2025 CII"
+    return b.periodo.localeCompare(a.periodo);
+  });
 
     const labelsP   = periodosOrdenados.map(x => x.periodo);
     const serieApAbs = periodosOrdenados.map(x => x.ap);
@@ -672,6 +932,7 @@ document.addEventListener('DOMContentLoaded', async () => {
     histSection.style.display = 'none';
     chartsWrap.style.display  = '';
     hostTop.style.display     = '';
+    hideDropdown();
   });
 
   /* ========= Eventos del filtro ========= */
@@ -684,11 +945,9 @@ document.addEventListener('DOMContentLoaded', async () => {
       hostTop.style.display     = '';
       return;
     }
+    hideDropdown();
     renderDocenteHistory(q);
   }
 
   searchButton?.addEventListener('click', onSearch);
-  docenteFilterInput?.addEventListener('keydown', (e) => {
-    if (e.key === 'Enter') onSearch();
-  });
 });

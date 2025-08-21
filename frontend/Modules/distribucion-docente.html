@@ -7,6 +7,7 @@
 
   <!-- Look & feel compartido -->
   <link rel="stylesheet" href="/styles/config.css">
+  <link rel="stylesheet" href="../styles/distribucion-docente.css">
   <link rel="stylesheet"
         href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.2/css/all.min.css"
         referrerpolicy="no-referrer"/>
@@ -19,111 +20,19 @@
       root.classList.add('no-theme-transitions');
     })();
   </script>
-
+  
   <style>
-    .toolbar{
-      display:flex; align-items:center; gap:10px; flex-wrap:wrap; margin-bottom:14px;
-    }
-    .toolbar select, .toolbar button{
-      background: var(--panel-2); color: var(--ink);
-      border:1.5px solid var(--textarea-border); border-radius:8px;
-      padding:10px 12px; font-size:14px;
-    }
-
-    .legend{
-      display:flex; align-items:center; gap:8px; margin:6px 0 10px 0;
-    }
-    .legend .box{ width:24px; height:14px; border-radius:4px; border:1px solid var(--panel-border); }
-    .note{ font-size:12px; color: var(--muted); }
-
-    .grid-wrap{
-      overflow:auto; border:1px solid var(--panel-border); border-radius:12px;
-      background: color-mix(in srgb, var(--panel-2) 96%, transparent);
-    }
-    /* Heatmap sin espacios y con números legibles */
-    table.grid{
-      width:100%; min-width: 880px;
-      border-collapse: separate; border-spacing: 0;
-    }
-    table.grid thead th{
-      position: sticky; top: 0; z-index: 2;
-      background: color-mix(in srgb, var(--primary) 12%, transparent);
-      color: var(--ink); font-weight:700; padding:10px; font-size:14px;
-      border-bottom:1px solid var(--panel-border); text-align:left;
-    }
-    table.grid tbody th{
-      padding:10px; border-bottom:1px solid var(--panel-border);
-      font-size:14px; color: var(--ink);
-      background: color-mix(in srgb, var(--panel-2) 96%, transparent);
-      white-space: nowrap; width: 72px;
-      position: sticky; left: 0; z-index: 1;
-    }
-    table.grid tbody td{ padding:0; border-bottom:1px solid var(--panel-border); }
-    .cell{
-      display:block; width:100%; height:42px; line-height:42px;
-      text-align:center; border-radius:0; border:none; margin:0; box-shadow:none;
-      font-weight:800; font-size:14px; color:#fff;
-      text-shadow: 0 1px 1px rgba(0,0,0,.45); letter-spacing:.2px;
+    .description-legend {
+      text-align: center;
+      margin: 0.2rem 0 1rem 0;
+      font-size: 0.9rem;
+      color: #6c757d;
+      line-height: 1.3;
     }
 
-    /* Cabecera del docente con chips de horas */
-    .teacher-header{ display:flex; align-items:center; justify-content:space-between; gap:12px; flex-wrap:wrap; margin-top:18px; }
-    .teacher-title{ font-weight:800; color: var(--ink); font-size:20px; }
-    .teacher-chips{ display:flex; gap:8px; align-items:center; }
-    .chip{
-      display:inline-flex; align-items:center; gap:6px;
-      padding:6px 10px; border-radius:999px; border:1px solid var(--panel-border);
-      font-size:13px; font-weight:800; letter-spacing:.2px;
+    .dark-mode .description-legend {
+      color: #adb5bd;
     }
-    .chip i{ font-size:14px; }
-    .chip-class{ background: rgba(96,165,250,.18); }
-    .chip-act  { background: rgba(244,114,182,.18); }
-
-    .small-note{ font-size:13px; color: var(--muted); margin-top:4px; }
-
-    .sched-wrap{
-      overflow:auto; border:1px solid var(--panel-border); border-radius:12px;
-      background: color-mix(in srgb, var(--panel-2) 96%, transparent);
-    }
-    table.sched{
-      width:100%; border-collapse: collapse; min-width: 980px;
-    }
-    table.sched thead th{
-      position: sticky; top: 0; z-index: 2;
-      background: color-mix(in srgb, var(--primary) 12%, transparent);
-      color: var(--ink); font-weight:700; padding:10px; font-size:14px;
-      border-bottom:1px solid var(--panel-border); text-align:left;
-    }
-    table.sched tbody td, table.sched tbody th{
-      padding:8px; border-bottom:1px solid var(--panel-border); font-size:13px; color: var(--ink);
-      vertical-align: top;
-    }
-    table.sched tbody th{
-      background: color-mix(in srgb, var(--panel-2) 96%, transparent);
-      white-space: nowrap; width: 72px; position: sticky; left: 0; z-index: 1;
-    }
-
-    .slot{
-      min-height: 40px; border-radius:8px; padding:8px; line-height:1.2;
-      background: color-mix(in srgb, var(--primary) 8%, transparent);
-      border:1px dashed var(--panel-border);
-      display:flex; flex-direction:column; gap:6px;
-    }
-    .slot.busy{ background: color-mix(in srgb, var(--primary) 16%, transparent); border-style: solid; }
-    .row{
-      display:flex; flex-direction:column; gap:2px;
-      background: color-mix(in srgb, var(--panel-2) 80%, transparent);
-      border:1px solid var(--panel-border);
-      border-radius:6px; padding:6px;
-    }
-    .tag{
-      display:inline-block; font-size:11px; font-weight:800; padding:2px 6px; border-radius:999px; letter-spacing:.2px;
-      border:1px solid var(--panel-border);
-    }
-    .tag.class{ background: rgba(96,165,250,.2); }
-    .tag.act  { background: rgba(244,114,182,.22); }
-    .subj{ font-weight:800; }
-    .meta{ font-size:12px; color: var(--muted); }
   </style>
 </head>
 
@@ -137,14 +46,27 @@
 
   <div class="container">
     <h2>Distribución Docente</h2>
+    <div class="description-legend">
+      Carga académica y clases (mapa calor)
+    </div>
+    
     <div class="config-section">
       <div class="toolbar">
-        <label for="docenteSelect" style="font-weight:700; color:var(--ink);">Docente:</label>
-        <select id="docenteSelect" style="min-width:340px;">
-          <option value="">Tabla de calor</option>
-        </select>
+        <div class="search-container" style="position: relative; margin-bottom: 20px;">
+          <div class="input-group">
+            <input type="text" 
+                  id="docenteInput" 
+                  placeholder="Buscar docente..."
+                  class="form-control"
+                  autocomplete="off">
+            <button type="button" id="clearBtn" class="btn btn-outline-secondary">
+              Limpiar
+            </button>
+          </div>
+          <div id="docenteDropdown" class="autocomplete-dropdown"></div>
+        </div>
         <button id="goMenu" class="secondary-button action-button">
-          <i class="fa-solid fa-arrow-left"></i> Ir a Menú
+         Ir a Menú
         </button>
       </div>
 

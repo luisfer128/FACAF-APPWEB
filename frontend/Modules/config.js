@@ -403,14 +403,21 @@ async function loadTemplates() {
   try {
     const res = await fetch(`${API_BASE}/plantillas`);
     const data = await res.json();
+
     document.getElementById('template-autoridad').value = data.autoridad || '';
     document.getElementById('template-docente').value   = data.docente   || '';
     document.getElementById('template-estudiante').value= data.estudiante|| '';
-    await saveData('emailTemplates', data); // sincroniza también local
+
+    const local = await loadData('emailTemplates');
+    if (local) {
+      document.getElementById('correo').value = local.correoAutoridad;
+    }
+
   } catch (error) {
     console.error('⚠️ Error cargando plantillas de la BD:', error);
     const local = await loadData('emailTemplates');
     if (local) {
+      document.getElementById('correo').value = local.correo || '';
       document.getElementById('template-autoridad').value = local.autoridad || '';
       document.getElementById('template-docente').value   = local.docente   || '';
       document.getElementById('template-estudiante').value= local.estudiante|| '';
@@ -445,10 +452,12 @@ document.addEventListener('DOMContentLoaded', async function () {
     const templateAutoridad = document.getElementById('template-autoridad').value;
     const templateDocente   = document.getElementById('template-docente').value;
     const templateEstudiante= document.getElementById('template-estudiante').value;
+    const correoAutoridad = document.getElementById('correo').value;
 
+    const templates2 = { correoAutoridad: correoAutoridad, autoridad: templateAutoridad, docente: templateDocente, estudiante: templateEstudiante };
     const templates = { autoridad: templateAutoridad, docente: templateDocente, estudiante: templateEstudiante };
 
-    await saveData('emailTemplates', templates); // guardar local
+    await saveData('emailTemplates', templates2); // guardar local
     try {
       await fetch(`${API_BASE}/plantillas`, {
         method: 'POST',

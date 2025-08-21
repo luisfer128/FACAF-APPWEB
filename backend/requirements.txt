@@ -1,5 +1,7 @@
-Flask
+Flask~=3.0.3
 flask-cors
-requests
-python-dotenv
-pyodbc
+requests~=2.32.3
+python-dotenv~=1.1.1
+pyodbc~=5.2.0
+msal~=1.33.0
+dotenv~=0.9.9

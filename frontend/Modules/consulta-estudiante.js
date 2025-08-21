@@ -1,5 +1,335 @@
 import { loadData } from '../indexeddb-storage.js';
 
+// ---- Funciones Helper ----
+const norm = (s) => (s ?? '').toString().trim();
+const asNum = (v) => {
+  const n = Number(String(v).replace(',', '.'));
+  return Number.isFinite(n) ? n : null;
+};
+const canon = (s) =>
+  (s ?? '').toString()
+    .normalize('NFD').replace(/[\u0300-\u036f]/g, '')
+    .replace(/\s+/g, ' ')
+    .trim()
+    .toUpperCase();
+
+function parsePeriodo(p) {
+  const m = String(p).match(/(\d{4})\s*-\s*(\d{4})\s*(CI{1,2})/i);
+  if (!m) return { a: 0, b: 0, ciclo: 0 };
+  return { a: +m[1], b: +m[2], ciclo: /CII/i.test(m[3]) ? 1 : 0 };
+}
+
+function cmpPeriodo(p1, p2) {
+  const A = parsePeriodo(p1), B = parsePeriodo(p2);
+  if (A.a !== B.a) return A.a - B.a;
+  if (A.b !== B.b) return A.b - B.b;
+  return A.ciclo - B.ciclo;
+}
+
+// ===== Paleta fija por nivel =====
+function colorNivel(n) {
+  // tonos fijos por nivel; si llega uno fuera de 1..9, se calcula.
+  const hues = {1:210, 2:0, 3:30, 4:60, 5:120, 6:280, 7:330, 8:180, 9:40};
+  const h = hues[n] ?? ((n * 37) % 360);
+  return `hsl(${h}, 72%, 50%)`;
+}
+
+// ===== Función para color gradual del heatmap =====
+function getHeatmapColor(percentage, maxPercentage) {
+  // Normalizar el porcentaje de 0 a 1
+  const normalized = percentage / maxPercentage;
+  
+  // Interpolación de verde (120°) a rojo (0°) en HSL
+  // Verde: hsl(120, 70%, 50%) -> Rojo: hsl(0, 70%, 50%)
+  const hue = 120 * (1 - normalized); // De 120 (verde) a 0 (rojo)
+  const saturation = 70;
+  const lightness = 50;
+  
+  return `hsl(${hue}, ${saturation}%, ${lightness}%)`;
+}
+
+// ========= SISTEMA DE AUTOCOMPLETADO PARA ESTUDIANTES =========
+function initStudentAutocomplete(dataFiltrada, studentFilterInput, onSearch) {
+  // Crear lista única de estudiantes
+  const estudiantesMap = new Map();
+  
+  dataFiltrada.forEach(record => {
+    const id = record.IDENTIFICACION;
+    const nombres = `${record.APELLIDOS || ''} ${record.NOMBRES || ''}`.trim();
+    
+    if (id && nombres && !estudiantesMap.has(id)) {
+      estudiantesMap.set(id, {
+        id: id,
+        nombre: nombres,
+        canonNombre: canon(nombres),
+        correo: record.CORREO_INSTITUCIONAL || record.CORREO_PERSONAL || '',
+        carrera: record.CARRERA || ''
+      });
+    }
+  });
+  
+  const listaEstudiantes = Array.from(estudiantesMap.values());
+  
+  // Crear dropdown para estudiantes
+  const dropdown = document.createElement('div');
+  dropdown.className = 'autocomplete-dropdown';
+  dropdown.style.cssText = `
+    position: absolute;
+    top: 100%;
+    left: 0;
+    right: 0;
+    background: var(--card, white);
+    border: 1px solid var(--border, #e2e8f0);
+    border-radius: 8px;
+    box-shadow: 0 10px 25px -5px rgba(0,0,0,0.1), 0 10px 10px -5px rgba(0,0,0,0.04);
+    z-index: 1000;
+    max-height: 300px;
+    overflow-y: auto;
+    display: none;
+    margin-top: 4px;
+  `;
+
+  // Agregar estilos CSS para el dropdown
+  if (!document.querySelector('#student-autocomplete-styles')) {
+    const style = document.createElement('style');
+    style.id = 'student-autocomplete-styles';
+    style.textContent = `
+      .autocomplete-dropdown::-webkit-scrollbar {
+        width: 8px;
+      }
+      .autocomplete-dropdown::-webkit-scrollbar-track {
+        background: var(--muted, #f1f5f9);
+        border-radius: 4px;
+      }
+      .autocomplete-dropdown::-webkit-scrollbar-thumb {
+        background: var(--muted-foreground, #64748b);
+        border-radius: 4px;
+      }
+      .autocomplete-dropdown::-webkit-scrollbar-thumb:hover {
+        background: var(--foreground, #0f172a);
+      }
+    `;
+    dropdown.appendChild(style);
+  }
+
+  // Insertar dropdown después del input
+  const container = studentFilterInput.parentElement;
+  if (container.style.position !== 'relative' && container.style.position !== 'absolute') {
+    container.style.position = 'relative';
+  }
+  container.appendChild(dropdown);
+
+  function showDropdown(filteredEstudiantes) {
+    // Limpiar contenido previo pero mantener el style
+    const existingStyle = dropdown.querySelector('style');
+    dropdown.innerHTML = '';
+    if (existingStyle) dropdown.appendChild(existingStyle);
+    
+    if (filteredEstudiantes.length === 0) {
+      dropdown.style.display = 'none';
+      return;
+    }
+
+    filteredEstudiantes.slice(0, 10).forEach((estudiante, index) => {
+      const item = document.createElement('div');
+      item.className = 'dropdown-item';
+      item.style.cssText = `
+        padding: 12px 16px;
+        cursor: pointer;
+        border-bottom: 1px solid var(--border);
+        font-size: 14px;
+        transition: all 0.15s ease;
+        color: var(--text);
+        background: transparent;
+      `;
+      
+      // Remover borde del último item
+      if (index === filteredEstudiantes.slice(0, 10).length - 1) {
+        item.style.borderBottom = 'none';
+      }
+      
+      /* Truncar carrera si es muy larga
+      const carreraCorta = estudiante.carrera.length > 30 
+        ? estudiante.carrera.substring(0, 30) + '...' 
+        : estudiante.carrera;
+      */
+     
+      item.innerHTML = `
+        <div style="font-weight: 600; margin-bottom: 2px; line-height: 1.3;">${estudiante.nombre}</div>
+        <div class="item-id" style="font-size: 12px; color: var(--muted); opacity: 0.9; line-height: 1.2;">
+          ID: ${estudiante.id} • ${estudiante.carrera}
+        </div>
+      `;
+
+      // Hover effect
+      item.addEventListener('mouseenter', () => {
+        item.style.backgroundColor = 'color-mix(in srgb, var(--accent) 12%, transparent)';
+      });
+      
+      item.addEventListener('mouseleave', () => {
+        if (!item.classList.contains('selected')) {
+          item.style.backgroundColor = 'transparent';
+        }
+      });
+
+      // Click para seleccionar
+      item.addEventListener('click', () => {
+        studentFilterInput.value = estudiante.nombre;
+        hideDropdown();
+        onSearch();
+      });
+
+      dropdown.appendChild(item);
+    });
+
+    dropdown.style.display = 'block';
+  }
+
+  function hideDropdown() {
+    dropdown.style.display = 'none';
+  }
+
+  function filterEstudiantes(query) {
+    if (!query || query.length < 2) return [];
+    
+    const queryCanon = canon(query);
+    return listaEstudiantes.filter(estudiante => {
+      // Buscar por ID (exacto) o por nombre (contiene)
+      return estudiante.id.includes(query.trim()) || 
+             estudiante.canonNombre.includes(queryCanon);
+    });
+  }
+
+  /* ========= Eventos del autocompletado ========= */
+  studentFilterInput?.addEventListener('input', (e) => {
+    const query = e.target.value;
+    if (query.length < 2) {
+      hideDropdown();
+      return;
+    }
+    
+    const filtered = filterEstudiantes(query);
+    showDropdown(filtered);
+  });
+
+  studentFilterInput?.addEventListener('blur', (e) => {
+    // Delay para permitir click en dropdown
+    setTimeout(() => {
+      hideDropdown();
+    }, 200);
+  });
+
+  studentFilterInput?.addEventListener('focus', (e) => {
+    const query = e.target.value;
+    if (query.length >= 2) {
+      const filtered = filterEstudiantes(query);
+      showDropdown(filtered);
+    }
+  });
+
+  // Navegación con teclado
+  studentFilterInput?.addEventListener('keydown', (e) => {
+    const items = dropdown.querySelectorAll('.dropdown-item');
+    let currentSelected = dropdown.querySelector('.selected');
+    
+    if (e.key === 'ArrowDown') {
+      e.preventDefault();
+      if (!currentSelected) {
+        if (items.length > 0) {
+          items[0].classList.add('selected');
+          items[0].style.backgroundColor = 'var(--accent, #3b82f6)';
+          items[0].style.color = 'var(--accent-foreground, white)';
+          const idEl = items[0].querySelector('.item-id');
+          if (idEl) idEl.style.color = 'rgba(255,255,255,0.9)';
+        }
+      } else {
+        // Remover selección actual
+        currentSelected.classList.remove('selected');
+        currentSelected.style.backgroundColor = '';
+        // Detectar modo oscuro para aplicar color correcto
+        const isDark = window.matchMedia('(prefers-color-scheme: dark)').matches || 
+                      document.body.classList.contains('dark') || 
+                      document.documentElement.getAttribute('data-theme') === 'dark';
+        
+        currentSelected.style.color = isDark ? 'var(--foreground, #e2e8f0)' : 'var(--foreground, #0f172a)';
+        const currentIdEl = currentSelected.querySelector('.item-id');
+        if (currentIdEl) {
+          currentIdEl.style.color = isDark ? 'var(--muted-foreground, #94a3b8)' : 'var(--muted-foreground, #64748b)';
+        }
+        
+        // Seleccionar siguiente
+        const nextIndex = Array.from(items).indexOf(currentSelected) + 1;
+        const nextItem = nextIndex < items.length ? items[nextIndex] : items[0];
+        nextItem.classList.add('selected');
+        nextItem.style.backgroundColor = 'var(--accent, #3b82f6)';
+        nextItem.style.color = 'var(--accent-foreground, white)';
+        const nextIdEl = nextItem.querySelector('.item-id');
+        if (nextIdEl) nextIdEl.style.color = 'rgba(255,255,255,0.9)';
+        
+        // Scroll automático si es necesario
+        nextItem.scrollIntoView({ block: 'nearest', behavior: 'smooth' });
+      }
+    } else if (e.key === 'ArrowUp') {
+      e.preventDefault();
+      if (!currentSelected) {
+        if (items.length > 0) {
+          const lastItem = items[items.length - 1];
+          lastItem.classList.add('selected');
+          lastItem.style.backgroundColor = 'var(--accent, #3b82f6)';
+          lastItem.style.color = 'var(--accent-foreground, white)';
+          const idEl = lastItem.querySelector('.item-id');
+          if (idEl) idEl.style.color = 'rgba(255,255,255,0.9)';
+          lastItem.scrollIntoView({ block: 'nearest', behavior: 'smooth' });
+        }
+      } else {
+        // Remover selección actual
+        currentSelected.classList.remove('selected');
+        currentSelected.style.backgroundColor = '';
+        // Detectar modo oscuro para aplicar color correcto
+        const isDarkUp = window.matchMedia('(prefers-color-scheme: dark)').matches || 
+                        document.body.classList.contains('dark') || 
+                        document.documentElement.getAttribute('data-theme') === 'dark';
+        
+        currentSelected.style.color = isDarkUp ? 'var(--foreground, #e2e8f0)' : 'var(--foreground, #0f172a)';
+        const currentIdEl = currentSelected.querySelector('.item-id');
+        if (currentIdEl) {
+          currentIdEl.style.color = isDarkUp ? 'var(--muted-foreground, #94a3b8)' : 'var(--muted-foreground, #64748b)';
+        }
+        
+        // Seleccionar anterior
+        const prevIndex = Array.from(items).indexOf(currentSelected) - 1;
+        const prevItem = prevIndex >= 0 ? items[prevIndex] : items[items.length - 1];
+        prevItem.classList.add('selected');
+        prevItem.style.backgroundColor = 'var(--accent, #3b82f6)';
+        prevItem.style.color = 'var(--accent-foreground, white)';
+        const prevIdEl = prevItem.querySelector('.item-id');
+        if (prevIdEl) prevIdEl.style.color = 'rgba(255,255,255,0.9)';
+        
+        // Scroll automático si es necesario
+        prevItem.scrollIntoView({ block: 'nearest', behavior: 'smooth' });
+      }
+    } else if (e.key === 'Enter') {
+      e.preventDefault();
+      if (currentSelected) {
+        currentSelected.click();
+      } else {
+        onSearch();
+      }
+    } else if (e.key === 'Escape') {
+      hideDropdown();
+      studentFilterInput.blur();
+    }
+  });
+
+  // Cerrar dropdown al hacer click fuera
+  document.addEventListener('click', (e) => {
+    if (!studentFilterInput.contains(e.target) && !dropdown.contains(e.target)) {
+      hideDropdown();
+    }
+  });
+}
+
+// ========= CÓDIGO PRINCIPAL =========
 document.addEventListener('DOMContentLoaded', async () => {
   // ---- DOM ----
   const chartDistribucionCanvas = document.getElementById('chartDistribucionPromedios');
@@ -31,53 +361,6 @@ document.addEventListener('DOMContentLoaded', async () => {
     window.location.href = '../index.html';
   });
 
-  // ---- Helpers ----
-  const norm = (s) => (s ?? '').toString().trim();
-  const asNum = (v) => {
-    const n = Number(String(v).replace(',', '.'));
-    return Number.isFinite(n) ? n : null;
-  };
-  const canon = (s) =>
-    (s ?? '').toString()
-      .normalize('NFD').replace(/[\u0300-\u036f]/g, '')
-      .replace(/\s+/g, ' ')
-      .trim()
-      .toUpperCase();
-
-  function parsePeriodo(p) {
-    const m = String(p).match(/(\d{4})\s*-\s*(\d{4})\s*(CI{1,2})/i);
-    if (!m) return { a: 0, b: 0, ciclo: 0 };
-    return { a: +m[1], b: +m[2], ciclo: /CII/i.test(m[3]) ? 1 : 0 };
-  }
-  function cmpPeriodo(p1, p2) {
-    const A = parsePeriodo(p1), B = parsePeriodo(p2);
-    if (A.a !== B.a) return A.a - B.a;
-    if (A.b !== B.b) return A.b - B.b;
-    return A.ciclo - B.ciclo;
-  }
-
-  // ===== Paleta fija por nivel =====
-  function colorNivel(n) {
-    // tonos fijos por nivel; si llega uno fuera de 1..9, se calcula.
-    const hues = {1:210, 2:0, 3:30, 4:60, 5:120, 6:280, 7:330, 8:180, 9:40};
-    const h = hues[n] ?? ((n * 37) % 360);
-    return `hsl(${h}, 72%, 50%)`;
-  }
-
-  // ===== Función para color gradual del heatmap =====
-  function getHeatmapColor(percentage, maxPercentage) {
-    // Normalizar el porcentaje de 0 a 1
-    const normalized = percentage / maxPercentage;
-    
-    // Interpolación de verde (120°) a rojo (0°) en HSL
-    // Verde: hsl(120, 70%, 50%) -> Rojo: hsl(0, 70%, 50%)
-    const hue = 120 * (1 - normalized); // De 120 (verde) a 0 (rojo)
-    const saturation = 70;
-    const lightness = 50;
-    
-    return `hsl(${hue}, ${saturation}%, ${lightness}%)`;
-  }
-
   // filtros globales
   const ESTADOS_PERMITIDOS = new Set(['APROBADA', 'REPROBADA']);
   const DOCENTES_EXCLUIDOS = new Set(['MOVILIDAD']);
@@ -91,6 +374,9 @@ document.addEventListener('DOMContentLoaded', async () => {
     if (materiaExcluida(r.MATERIA)) return false;
     return true;
   });
+
+  // Inicializar autocompletado para estudiantes
+  initStudentAutocomplete(dataFiltrada, studentFilterInput, buscar);
 
   // ====== Gráficos globales ======
   const estudiantesPorPeriodo = {};
@@ -348,24 +634,24 @@ document.addEventListener('DOMContentLoaded', async () => {
     const first = records[0];
     const nombre = `${norm(first.APELLIDOS)} ${norm(first.NOMBRES)}`.trim();
     const cedula = norm(first.IDENTIFICACION);
-    const correos = Array.from(new Set(records.flatMap(r => [norm(r.CORREO_INSTITUCIONAL), norm(r.CORREO_PERSONAL)]).filter(Boolean))).join(', ');
+    const correos = Array.from(new Set(records.flatMap(r => [norm(r.CORREO_INSTITUCIONAL), norm(r.CORREO_PERSONAL)]).filter(Boolean))).join(', ').toLowerCase();
     const telefono = norm(first.CELULAR);
     const aprobadas = records.filter(r => canon(r.ESTADO) === 'APROBADA').length;
     const reprobadas = records.filter(r => canon(r.ESTADO) === 'REPROBADA').length;
 
     const periodos = Array.from(new Set(records.map(r => r.PERIODO))).sort(cmpPeriodo);
-    const periodoActual = periodos[periodos.length - 1];
-    const promActual = (() => {
-      const arr = records.filter(r => r.PERIODO === periodoActual).map(r => asNum(r.PROMEDIO)).filter(v => v !== null);
-      const s = arr.reduce((a, b) => a + b, 0);
-      return arr.length ? (s / arr.length) : null;
-    })();
+    
+    // Calcular promedio general de TODOS los períodos
+    const todosLosPromedios = records.map(r => asNum(r.PROMEDIO)).filter(v => v !== null);
+    const promedioGeneral = todosLosPromedios.length 
+      ? (todosLosPromedios.reduce((a, b) => a + b, 0) / todosLosPromedios.length) 
+      : null;
 
     studentHeading.textContent = `Datos Generales de ${nombre}`;
     studentInfoBody.innerHTML = `
       <tr><th style="width:160px;">Cédula</th><td>${cedula || '-'}</td><th>Nombre</th><td>${nombre || '-'}</td></tr>
       <tr><th>Correos</th><td>${correos || '-'}</td><th>Teléfonos</th><td>${telefono || '-'}</td></tr>
-      <tr><th>Promedio general (${periodoActual})</th><td>${promActual !== null ? promActual.toFixed(2) : '-'}</td><th>Veces Reprobadas</th><td>${reprobadas}</td></tr>
+      <tr><th>Promedio general</th><td>${promedioGeneral !== null ? promedioGeneral.toFixed(2) : '-'}</td><th>Veces Reprobadas</th><td>${reprobadas}</td></tr>
       <tr><th>Materias Aprobadas</th><td>${aprobadas}</td><th></th><td></td></tr>
     `;
 
@@ -477,14 +763,40 @@ document.addEventListener('DOMContentLoaded', async () => {
   }
 
   function reset() {
+    // Limpiar el campo de búsqueda
     studentFilterInput.value = '';
-    showGeneralView();
+    
+    // Ocultar dropdown del autocompletado si existe
+    const dropdown = document.querySelector('.autocomplete-dropdown');
+    if (dropdown) {
+      dropdown.style.display = 'none';
+    }
+    
+    // Mostrar todas las secciones de gráficos generales
+    sectionDistribucion.style.display = '';
+    sectionPromedioNivel.style.display = '';  
+    sectionHeatmaps.style.display = '';
+    
+    // Ocultar la sección del estudiante
+    studentDetails.style.display = 'none';
+    
+    // Destruir gráficos del estudiante para liberar memoria
+    if (lineChart) { 
+      lineChart.destroy(); 
+      lineChart = null; 
+    }
+    if (barsChart) { 
+      barsChart.destroy(); 
+      barsChart = null; 
+    }
+    
+    // Scroll al inicio
     window.scrollTo({ top: 0, behavior: 'smooth' });
   }
 
   // eventos
-  searchButton.addEventListener('click', buscar);
   clearButton.addEventListener('click', reset);
   studentFilterInput.addEventListener('keydown', (e) => { if (e.key === 'Enter') buscar(); if (e.key === 'Escape') reset(); });
   studentFilterInput.addEventListener('input', () => { if (studentFilterInput.value.trim() === '') showGeneralView(); });
+  searchButton.addEventListener('click', buscar);
 });

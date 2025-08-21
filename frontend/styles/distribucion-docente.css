@@ -1,0 +1,321 @@
+.toolbar{
+      display:flex; align-items:center; gap:10px; flex-wrap:wrap; margin-bottom:14px;
+    }
+    .toolbar select, .toolbar button{
+      background: var(--panel-2); color: var(--ink);
+      border:1.5px solid var(--textarea-border); border-radius:8px;
+      padding:10px 12px; font-size:14px;
+    }
+
+    .legend{
+      display:flex; align-items:center; gap:8px; margin:6px 0 10px 0;
+    }
+    .legend .box{ width:24px; height:14px; border-radius:4px; border:1px solid var(--panel-border); }
+    .note{ font-size:12px; color: var(--muted); }
+
+    .grid-wrap{
+      overflow:auto; border:1px solid var(--panel-border); border-radius:12px;
+      background: color-mix(in srgb, var(--panel-2) 96%, transparent);
+    }
+    /* Heatmap sin espacios y con números legibles */
+    table.grid{
+      width:100%; min-width: 880px;
+      border-collapse: separate; border-spacing: 0;
+    }
+    table.grid thead th{
+      position: sticky; top: 0; z-index: 2;
+      background: color-mix(in srgb, var(--primary) 12%, transparent);
+      color: var(--ink); font-weight:700; padding:10px; font-size:14px;
+      border-bottom:1px solid var(--panel-border); text-align:left;
+    }
+    table.grid tbody th{
+      padding:10px; border-bottom:1px solid var(--panel-border);
+      font-size:14px; color: var(--ink);
+      background: color-mix(in srgb, var(--panel-2) 96%, transparent);
+      white-space: nowrap; width: 72px;
+      position: sticky; left: 0; z-index: 1;
+    }
+    table.grid tbody td{ padding:0; border-bottom:1px solid var(--panel-border); }
+    .cell{
+      display:block; width:100%; height:42px; line-height:42px;
+      text-align:center; border-radius:0; border:none; margin:0; box-shadow:none;
+      font-weight:800; font-size:14px; color:#fff;
+      text-shadow: 0 1px 1px rgba(0,0,0,.45); letter-spacing:.2px;
+    }
+
+    /* Cabecera del docente con chips de horas */
+    .teacher-header{ display:flex; align-items:center; justify-content:space-between; gap:12px; flex-wrap:wrap; margin-top:18px; }
+    .teacher-title{ font-weight:800; color: var(--ink); font-size:20px; }
+    .teacher-chips{ display:flex; gap:8px; align-items:center; }
+    .chip{
+      display:inline-flex; align-items:center; gap:6px;
+      padding:6px 10px; border-radius:999px; border:1px solid var(--panel-border);
+      font-size:13px; font-weight:800; letter-spacing:.2px;
+    }
+    .chip i{ font-size:14px; }
+    .chip-class{ background: rgba(96,165,250,.18); }
+    .chip-act  { background: rgba(244,114,182,.18); }
+
+    .small-note{ font-size:13px; color: var(--muted); margin-top:4px; }
+
+    .sched-wrap{
+      overflow:auto; border:1px solid var(--panel-border); border-radius:12px;
+      background: color-mix(in srgb, var(--panel-2) 96%, transparent);
+    }
+    table.sched{
+      width:100%; border-collapse: collapse; min-width: 980px;
+    }
+    table.sched thead th{
+      position: sticky; top: 0; z-index: 2;
+      background: color-mix(in srgb, var(--primary) 12%, transparent);
+      color: var(--ink); font-weight:700; padding:10px; font-size:14px;
+      border-bottom:1px solid var(--panel-border); text-align:left;
+    }
+    table.sched tbody td, table.sched tbody th{
+      padding:8px; border-bottom:1px solid var(--panel-border); font-size:13px; color: var(--ink);
+      vertical-align: top;
+    }
+    table.sched tbody th{
+      background: color-mix(in srgb, var(--panel-2) 96%, transparent);
+      white-space: nowrap; width: 72px; position: sticky; left: 0; z-index: 1;
+    }
+
+    .slot{
+      min-height: 40px; border-radius:8px; padding:8px; line-height:1.2;
+      background: color-mix(in srgb, var(--primary) 8%, transparent);
+      border:1px dashed var(--panel-border);
+      display:flex; flex-direction:column; gap:6px;
+    }
+    .slot.busy{ background: color-mix(in srgb, var(--primary) 16%, transparent); border-style: solid; }
+    .row{
+      display:flex; flex-direction:column; gap:2px;
+      background: color-mix(in srgb, var(--panel-2) 80%, transparent);
+      border:1px solid var(--panel-border);
+      border-radius:6px; padding:6px;
+    }
+    .tag{
+      display:inline-block; font-size:11px; font-weight:800; padding:2px 6px; border-radius:999px; letter-spacing:.2px;
+      border:1px solid var(--panel-border);
+    }
+    .tag.class{ background: rgba(96,165,250,.2); }
+    .tag.act  { background: rgba(244,114,182,.22); }
+    .subj{ font-weight:800; }
+    .meta{ font-size:12px; color: var(--muted); }
+
+    #goMenu {
+    margin-left: auto;
+    background: #2563eb; 
+    color: #ffffff;
+    border: none;
+    padding: 0.6rem 1.2rem;
+    border-radius: 6px;
+    cursor: pointer;
+    font-size: 0.95rem;
+    font-weight: 600;
+    transition: 0.2s;
+    }
+
+    #goMenu:hover {
+    transform: translateY(-1px);
+    }
+    
+    /* Estilos mejorados pero sencillos para la barra de búsqueda */
+.search-container {
+  position: relative;
+  flex: 1;
+  max-width: 400px;
+  margin-bottom: 0 !important;
+}
+
+.input-group {
+  display: flex;
+  position: relative;
+  background: var(--panel-2);
+  border: 1.5px solid var(--textarea-border);
+  border-radius: 8px;
+  overflow: hidden;
+  transition: all 0.2s ease;
+}
+
+.input-group:focus-within {
+  border-color: var(--primary);
+  box-shadow: 0 0 0 3px color-mix(in srgb, var(--primary) 15%, transparent);
+}
+
+#docenteInput {
+  flex: 1;
+  background: transparent;
+  border: none;
+  outline: none;
+  padding: 10px 12px;
+  font-size: 14px;
+  color: var(--ink);
+  min-width: 0;
+}
+
+#docenteInput::placeholder {
+  color: var(--muted);
+  opacity: 1;
+}
+
+#clearBtn {
+  background: #2563eb;
+  border: none;
+  border-left: 1px solid var(--textarea-border);
+  padding: 8px 12px;
+  color: #ffffff;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  font-size: 13px;
+  white-space: nowrap;
+}
+
+#clearBtn:hover {
+  background: #1d4ed8;
+}
+
+#clearBtn i {
+  font-size: 12px;
+}
+
+/* Dropdown de autocompletado simple y limpio */
+.autocomplete-dropdown {
+  position: absolute;
+  top: calc(100% + 2px);
+  left: 0;
+  right: 0;
+  background: var(--panel-2);
+  border: 1.5px solid var(--textarea-border);
+  border-radius: 8px;
+  max-height: 200px;
+  overflow-y: auto;
+  z-index: 1000;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+  display: none;
+}
+
+.autocomplete-dropdown.show {
+  display: block;
+}
+
+/* Scrollbar simple */
+.autocomplete-dropdown::-webkit-scrollbar {
+  width: 6px;
+}
+
+.autocomplete-dropdown::-webkit-scrollbar-track {
+  background: var(--panel-2);
+}
+
+.autocomplete-dropdown::-webkit-scrollbar-thumb {
+  background: var(--textarea-border);
+  border-radius: 3px;
+}
+
+.autocomplete-dropdown::-webkit-scrollbar-thumb:hover {
+  background: var(--primary);
+}
+
+.dropdown-item {
+  padding: 12px 16px;
+  cursor: pointer;
+  color: var(--ink);
+  font-size: 14px;
+  transition: background-color 0.15s ease;
+  border-bottom: 1px solid var(--panel-border);
+}
+
+.dropdown-item:last-child {
+  border-bottom: none;
+}
+
+.dropdown-item:hover,
+.dropdown-item.highlighted {
+  background: color-mix(in srgb, var(--primary) 10%, transparent);
+}
+
+.dropdown-item.selected {
+  background: color-mix(in srgb, var(--primary) 16%, transparent);
+  font-weight: 600;
+}
+
+/* Estado vacío del dropdown */
+.autocomplete-empty {
+  padding: 16px;
+  text-align: center;
+  color: var(--muted);
+  font-style: italic;
+  font-size: 13px;
+}
+
+/* Resaltar texto coincidente */
+.highlight-match {
+  background: color-mix(in srgb, var(--primary) 25%, transparent);
+  font-weight: 600;
+  padding: 1px 3px;
+  border-radius: 3px;
+}
+
+/* Indicador de carga */
+.search-loading {
+  position: absolute;
+  right: 50px;
+  top: 50%;
+  transform: translateY(-50%);
+  color: var(--muted);
+  font-size: 14px;
+  pointer-events: none;
+}
+
+.search-loading i {
+  animation: spin 1s linear infinite;
+}
+
+@keyframes spin {
+  from { transform: rotate(0deg); }
+  to { transform: rotate(360deg); }
+}
+
+/* Mejorar el toolbar */
+.toolbar {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  flex-wrap: wrap;
+  margin-bottom: 16px;
+}
+
+/* Responsive */
+@media (max-width: 768px) {
+  .search-container {
+    max-width: none;
+    flex: 1 1 100%;
+    order: -1;
+  }
+  
+  .toolbar {
+    flex-direction: column;
+    align-items: stretch;
+    gap: 10px;
+  }
+  
+  #goMenu {
+    margin-left: 0;
+    align-self: flex-end;
+  }
+}
+
+/* Estados de error simple */
+.input-group.error {
+  border-color: #ef4444;
+  box-shadow: 0 0 0 3px rgba(239, 68, 68, 0.15);
+}
+
+/* Estados de éxito simple */
+.input-group.success {
+  border-color: #10b981;
+  box-shadow: 0 0 0 3px rgba(16, 185, 129, 0.15);
+}

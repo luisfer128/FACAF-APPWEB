@@ -314,6 +314,53 @@ textarea:focus{ outline:none; border-color: var(--textarea-focus); box-shadow:0 
   --tip-fg:#e5e7eb;
 }
 
+/* ===== Input autoridad - modo claro y oscuro ===== */
+.inputo-autoridad {
+    width: 250px;
+    padding: 6px 12px;
+    font-size: 14px;
+    font-family: "Segoe UI", Tahoma, Geneva, Verdana, sans-serif;
+    color: var(--ink);                /* Texto adaptable */
+    background-color: var(--textarea-bg);
+    border: 1px solid var(--textarea-border);
+    border-radius: 6px;
+    outline: none;
+    transition: all 0.2s ease-in-out;
+    margin-bottom: 15px;
+}
+
+.inputo-autoridad:focus {
+    border-color: var(--textarea-focus);
+    box-shadow: 0 0 0 2px var(--textarea-focus-shadow);
+    background-color: var(--textarea-focus-bg);
+}
+
+.inputo-autoridad::placeholder {
+    color: var(--muted);
+    font-style: italic;
+}
+
+/* Para textarea: evita redimensionar */
+.inputo-autoridad[rows] {
+    resize: none;
+}
+
+/* ===== Modo oscuro ===== */
+.dark-mode .inputo-autoridad {
+    color: #e5e7eb;                  /* Texto claro */
+    background-color: var(--textarea-bg);
+    border: 1px solid var(--textarea-border);
+}
+
+.dark-mode .inputo-autoridad:focus {
+    border-color: var(--textarea-focus);
+    box-shadow: 0 0 0 2px var(--textarea-focus-shadow);
+    background-color: var(--textarea-focus-bg);
+}
+
+.dark-mode .inputo-autoridad::placeholder {
+    color: #9ca3af;                  /* Placeholder más tenue */
+}
 
 /* Responsive */
 @media (max-width: 768px){

@@ -7,7 +7,9 @@ const END_TIME   = '22:00';
 const SLOT_MIN   = 30; // minutos por intervalo
 
 // DOM
-const docenteSelect = document.getElementById('docenteSelect');
+const docenteInput = document.getElementById('docenteInput');
+const docenteDropdown = document.getElementById('docenteDropdown');
+const clearBtn = document.getElementById('clearBtn');
 const heatWrap   = document.getElementById('heatWrap');
 const heatLegend = document.getElementById('heatLegend');
 const heatBody   = document.getElementById('heatBody');
@@ -151,6 +153,137 @@ function renderHeatTable({ counts, max, times }){
   }
 }
 
+// ==================== AUTOCOMPLETADO ========================================
+let allDocentes = [];
+let selectedTeacher = '';
+let currentHighlighted = -1;
+
+function filterDocentes(query) {
+  if (!query.trim()) return [];
+  const q = query.toLowerCase();
+  return allDocentes.filter(doc => 
+    doc.toLowerCase().includes(q)
+  ).slice(0, 10); // Máximo 10 resultados
+}
+
+function highlightMatch(text, query) {
+  if (!query) return text;
+  const regex = new RegExp(`(${query.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')})`, 'gi');
+  return text.replace(regex, '<span class="highlight-match">$1</span>');
+}
+
+function showDropdown(matches) {
+  docenteDropdown.innerHTML = '';
+  const query = docenteInput.value.trim();
+  
+  if (matches.length === 0) {
+    docenteDropdown.classList.remove('show');
+    return;
+  }
+
+  matches.forEach((docente, index) => {
+    const item = document.createElement('div');
+    item.className = 'dropdown-item';
+    item.innerHTML = highlightMatch(docente, query);
+    item.setAttribute('data-docente', docente);
+    item.setAttribute('data-index', index);
+    
+    // Event listener para click
+    item.addEventListener('click', (e) => {
+      e.preventDefault();
+      e.stopPropagation();
+      selectTeacher(docente);
+    });
+    
+    // Event listener para hover
+    item.addEventListener('mouseenter', () => {
+      document.querySelectorAll('.dropdown-item.highlighted').forEach(el => {
+        el.classList.remove('highlighted');
+      });
+      item.classList.add('highlighted');
+      currentHighlighted = index;
+    });
+    
+    docenteDropdown.appendChild(item);
+  });
+
+  docenteDropdown.classList.add('show');
+}
+
+function hideDropdown() {
+  docenteDropdown.classList.remove('show');
+  currentHighlighted = -1;
+}
+
+function selectTeacher(teacher) {
+  selectedTeacher = teacher;
+  docenteInput.value = teacher;
+  hideDropdown();
+  loadTeacherSchedule(teacher);
+  // Remover cualquier estilo de error
+  docenteInput.style.borderColor = '';
+}
+
+function updateHighlight(items) {
+  items.forEach((item, index) => {
+    if (index === currentHighlighted) {
+      item.classList.add('highlighted');
+    } else {
+      item.classList.remove('highlighted');
+    }
+  });
+}
+
+function validateAndLoadTeacher() {
+  const inputValue = docenteInput.value.trim();
+  if (!inputValue) {
+    showHeatMap();
+    return;
+  }
+
+  // Verificar si es un nombre exacto
+  const exactMatch = allDocentes.find(doc => 
+    doc.toLowerCase() === inputValue.toLowerCase()
+  );
+
+  if (exactMatch) {
+    selectTeacher(exactMatch);
+  } else {
+    // Si no es exacto, mostrar mensaje o limpiar
+    docenteInput.style.borderColor = '#e74c3c';
+    setTimeout(() => {
+      docenteInput.style.borderColor = '';
+    }, 2000);
+  }
+}
+
+function clearSelection() {
+  docenteInput.value = '';
+  selectedTeacher = '';
+  hideDropdown();
+  showHeatMap();
+}
+
+function showHeatMap() {
+  if (heatBody.children.length > 0) {
+    heatWrap.style.display = '';
+    heatLegend.style.display = '';
+  }
+  schedWrap.style.display = 'none';
+  teacherHeader.style.display = 'none';
+  teacherSub.style.display = 'none';
+}
+
+function loadTeacherSchedule(teacher) {
+  // Ocultar heatmap
+  heatWrap.style.display = 'none';
+  heatLegend.style.display = 'none';
+
+  // Cargar horario del docente (reutilizando la función existente)
+  const M = buildTeacherMatrixUnified(dataClases || [], dataActiv || [], teacher);
+  renderTeacherTableUnified(M, teacher);
+}
+
 // ==================== HORARIO UNIFICADO POR DOCENTE =========================
 // Devuelve matrix[slot][day] = { classes:[...], acts:[...] } y totales de horas
 function buildTeacherMatrixUnified(dataClases, dataActiv, teacher){
@@ -277,13 +410,17 @@ function renderTeacherTableUnified({ matrix, times, hoursClass, hoursAct }, teac
   }
 }
 
+// Variables globales para los datos
+let dataClases = [];
+let dataActiv = [];
+
 // ==================== INIT ===================================================
 (async function init(){
   goMenuBtn?.addEventListener('click', () => window.location.href = '../index.html');
 
   // Cargar datasets
   showOverlay('Cargando datos...');
-  const [dataClases, dataActiv] = await Promise.all([ loadClasesData(), loadActividadesData() ]);
+  [dataClases, dataActiv] = await Promise.all([ loadClasesData(), loadActividadesData() ]);
   hideOverlay();
 
   // Heatmap global (si hay datos de clases)
@@ -295,39 +432,77 @@ function renderTeacherTableUnified({ matrix, times, hoursClass, hoursAct }, teac
     heatLegend.style.display = 'none';
   }
 
-  // Poblar combo con unión de docentes de ambos archivos
-  const docentes = Array.from(new Set([
+  // Recopilar todos los docentes
+  allDocentes = Array.from(new Set([
     ...((dataClases||[]).map(r => norm(r.DOCENTE)).filter(Boolean)),
     ...((dataActiv ||[]).map(r => norm(r.DOCENTE)).filter(Boolean)),
   ])).sort((a,b)=>a.localeCompare(b));
 
-  docenteSelect.innerHTML = `<option value="">-- MAPA DE CALOR --</option>` +
-    docentes.map(d => `<option value="${d}">${d}</option>`).join('');
-
-  // Selección de docente
-  docenteSelect.addEventListener('change', () => {
-    const teacher = docenteSelect.value;
-
-    if (!teacher){
-      // Sin selección -> mostrar heatmap si hay
-      if (Array.isArray(dataClases) && dataClases.length){
-        heatWrap.style.display   = '';
-        heatLegend.style.display = '';
-      }
-      schedWrap.style.display    = 'none';
-      teacherHeader.style.display= 'none';
-      teacherSub.style.display   = 'none';
-      return;
+  // Event listeners mejorados para el autocompletado
+  docenteInput.addEventListener('input', (e) => {
+    const query = e.target.value;
+    if (query.trim()) {
+      const matches = filterDocentes(query);
+      showDropdown(matches);
+      currentHighlighted = -1; // Reset highlight
+    } else {
+      hideDropdown();
+      showHeatMap();
     }
-
-    // Con docente, ocultar heatmap/leyenda
-    heatWrap.style.display   = 'none';
-    heatLegend.style.display = 'none';
-
-    const M = buildTeacherMatrixUnified(dataClases||[], dataActiv||[], teacher);
-    renderTeacherTableUnified(M, teacher);
   });
 
-  // (Opcional) precargar el primero:
-  // if (docentes.length) { docenteSelect.value = docentes[0]; docenteSelect.dispatchEvent(new Event('change')); }
+  docenteInput.addEventListener('keydown', (e) => {
+    const items = docenteDropdown.querySelectorAll('.dropdown-item');
+    
+    if (e.key === 'ArrowDown') {
+      e.preventDefault();
+      if (items.length > 0) {
+        currentHighlighted = Math.min(currentHighlighted + 1, items.length - 1);
+        updateHighlight(items);
+      }
+    } else if (e.key === 'ArrowUp') {
+      e.preventDefault();
+      if (items.length > 0) {
+        currentHighlighted = Math.max(currentHighlighted - 1, 0);
+        updateHighlight(items);
+      }
+    } else if (e.key === 'Enter') {
+      e.preventDefault();
+      if (currentHighlighted >= 0 && items[currentHighlighted]) {
+        const selectedDocente = items[currentHighlighted].getAttribute('data-docente');
+        selectTeacher(selectedDocente);
+      } else {
+        hideDropdown();
+        validateAndLoadTeacher();
+      }
+    } else if (e.key === 'Escape') {
+      hideDropdown();
+    }
+  });
+
+  docenteInput.addEventListener('blur', (e) => {
+    // Solo ocultar si realmente perdemos el foco
+    setTimeout(() => {
+      if (!docenteDropdown.matches(':hover') && !docenteDropdown.contains(document.activeElement)) {
+        hideDropdown();
+        if (docenteInput.value.trim()) {
+          validateAndLoadTeacher();
+        }
+      }
+    }, 200);
+  });
+
+  // Prevenir que el dropdown se cierre al hacer click en él
+  docenteDropdown.addEventListener('mousedown', (e) => {
+    e.preventDefault();
+  });
+
+  clearBtn?.addEventListener('click', clearSelection);
+
+  // Click fuera para cerrar dropdown
+  document.addEventListener('click', (e) => {
+    if (!docenteInput.contains(e.target) && !docenteDropdown.contains(e.target)) {
+      hideDropdown();
+    }
+  });
 })();

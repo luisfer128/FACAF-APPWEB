@@ -45,10 +45,23 @@ body{
   position: sticky; top:0; z-index:1000;
 }
 .top-header h1{ font-size:1.5rem; font-weight:600; }
-.go-to-menu-button{
-  background: var(--accent); color: var(--accent-ink); border:none; padding:.6rem 1.2rem; border-radius:6px; cursor:pointer; font-size:.95rem; font-weight:600; transition:.2s;
+.go-to-menu-button {
+  margin-left: auto; /* empuja el botón al extremo derecho */
+  background: var(--accent);
+  color: var(--accent-ink);
+  border: none;
+  padding: 0.6rem 1.2rem;
+  border-radius: 6px;
+  cursor: pointer;
+  font-size: 0.95rem;
+  font-weight: 600;
+  transition: 0.2s;
 }
-.go-to-menu-button:hover{ filter: brightness(1.05); transform: translateY(-1px); }
+
+.go-to-menu-button:hover {
+  filter: brightness(1.05);
+  transform: translateY(-1px);
+}
 
 /* ===== Contenido ===== */
 main{ padding:2rem; }
@@ -88,6 +101,16 @@ td:last-child{ font-weight:600; color: var(--title); }
   padding:.5rem .75rem; border-radius:6px; font-size:.95rem; box-shadow: 0 1px 2px rgba(0,0,0,.03); outline:none;
 }
 #periodSelect:focus{ border-color: var(--accent); box-shadow:0 0 0 3px color-mix(in srgb, var(--accent) 25%, transparent); }
+
+/* Toolbar: select a la izquierda, botón al final */
+.toolbar {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  padding: 0 2rem;
+  margin-top: 1rem;
+}
+
 
 /* ===== Responsive ===== */
 @media (max-width: 768px){
