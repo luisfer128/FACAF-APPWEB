@@ -123,6 +123,50 @@ document.addEventListener('DOMContentLoaded', async () => {
     }
   }
 
+  // ---------- Cargar plantillas por defecto si no existen ----------
+  async function ensureEmailTemplates() {
+    try {
+      // Verificar si ya existen plantillas locales
+      const local = await loadData('emailTemplates');
+      if (local) {
+        console.log('✅ Plantillas de email ya existen en IndexedDB');
+        return;
+      }
+
+      console.log('📧 Cargando plantillas de email por defecto...');
+      
+      // Intentar cargar desde la API
+      const res = await fetch(`${API_BASE}/plantillas`);
+      const data = await res.json();
+
+      // Crear objeto con plantillas (API + valor por defecto para correoAutoridad)
+      const templates = {
+        correoAutoridad: 'alvaro.espinozabu@ug.edu.ec', // valor por defecto
+        autoridad: data.autoridad || '',
+        docente: data.docente || '',
+        estudiante: data.estudiante || ''
+      };
+
+      // Guardar en IndexedDB
+      await saveData('emailTemplates', templates);
+      console.log('✅ Plantillas de email cargadas desde la API y guardadas localmente');
+
+    } catch (error) {
+      console.warn('⚠️ Error al cargar plantillas desde la API, usando valores por defecto:', error);
+      
+      // Si falla la API, usar plantillas vacías con correo por defecto
+      const fallbackTemplates = {
+        correoAutoridad: 'alvaro.espinozabu@ug.edu.ec',
+        autoridad: '',
+        docente: '',
+        estudiante: ''
+      };
+
+      await saveData('emailTemplates', fallbackTemplates);
+      console.log('✅ Plantillas de email por defecto guardadas localmente');
+    }
+  }
+
   // ---------- Validar rol contra backend y refrescar si cambió ----------
   async function validateRoleAndRefreshIfChanged() {
     const userData = (await loadData('userData')) || {};
@@ -323,6 +367,9 @@ document.addEventListener('DOMContentLoaded', async () => {
 
   await validateRoleAndRefreshIfChanged();
   if (__roleReloading) return;
+
+  // Asegurar que existan las plantillas de email
+  await ensureEmailTemplates();
 
   const didSync = await syncFilesFromBackendIfNeeded();
 

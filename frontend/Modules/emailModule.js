@@ -2,7 +2,7 @@
 import { loadData } from '../indexeddb-storage.js';
 
 const API_BASE = 'http://178.128.10.70:5000';
-let AUTORIDAD = "alvaro.espinozabu@ug.edu.ec"; // valor por defecto
+let AUTORIDAD = "alvaro.espinozabu@ug.edu.ec"; 
 
 async function initAutoridad() {
   const local = await loadData('emailTemplates');

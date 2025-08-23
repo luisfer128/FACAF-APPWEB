@@ -1,125 +1,272 @@
-.toolbar{
-      display:flex; align-items:center; gap:10px; flex-wrap:wrap; margin-bottom:14px;
-    }
-    .toolbar select, .toolbar button{
-      background: var(--panel-2); color: var(--ink);
-      border:1.5px solid var(--textarea-border); border-radius:8px;
-      padding:10px 12px; font-size:14px;
-    }
+.toolbar {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  flex-wrap: wrap;
+  margin-bottom: 14px;
+}
 
-    .legend{
-      display:flex; align-items:center; gap:8px; margin:6px 0 10px 0;
-    }
-    .legend .box{ width:24px; height:14px; border-radius:4px; border:1px solid var(--panel-border); }
-    .note{ font-size:12px; color: var(--muted); }
+.toolbar select,
+.toolbar button {
+  background: var(--panel-2);
+  color: var(--ink);
+  border: 1.5px solid var(--textarea-border);
+  border-radius: 8px;
+  padding: 10px 12px;
+  font-size: 14px;
+}
 
-    .grid-wrap{
-      overflow:auto; border:1px solid var(--panel-border); border-radius:12px;
-      background: color-mix(in srgb, var(--panel-2) 96%, transparent);
-    }
-    /* Heatmap sin espacios y con números legibles */
-    table.grid{
-      width:100%; min-width: 880px;
-      border-collapse: separate; border-spacing: 0;
-    }
-    table.grid thead th{
-      position: sticky; top: 0; z-index: 2;
-      background: color-mix(in srgb, var(--primary) 12%, transparent);
-      color: var(--ink); font-weight:700; padding:10px; font-size:14px;
-      border-bottom:1px solid var(--panel-border); text-align:left;
-    }
-    table.grid tbody th{
-      padding:10px; border-bottom:1px solid var(--panel-border);
-      font-size:14px; color: var(--ink);
-      background: color-mix(in srgb, var(--panel-2) 96%, transparent);
-      white-space: nowrap; width: 72px;
-      position: sticky; left: 0; z-index: 1;
-    }
-    table.grid tbody td{ padding:0; border-bottom:1px solid var(--panel-border); }
-    .cell{
-      display:block; width:100%; height:42px; line-height:42px;
-      text-align:center; border-radius:0; border:none; margin:0; box-shadow:none;
-      font-weight:800; font-size:14px; color:#fff;
-      text-shadow: 0 1px 1px rgba(0,0,0,.45); letter-spacing:.2px;
-    }
+.legend {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin: 6px 0 10px 0;
+}
 
-    /* Cabecera del docente con chips de horas */
-    .teacher-header{ display:flex; align-items:center; justify-content:space-between; gap:12px; flex-wrap:wrap; margin-top:18px; }
-    .teacher-title{ font-weight:800; color: var(--ink); font-size:20px; }
-    .teacher-chips{ display:flex; gap:8px; align-items:center; }
-    .chip{
-      display:inline-flex; align-items:center; gap:6px;
-      padding:6px 10px; border-radius:999px; border:1px solid var(--panel-border);
-      font-size:13px; font-weight:800; letter-spacing:.2px;
-    }
-    .chip i{ font-size:14px; }
-    .chip-class{ background: rgba(96,165,250,.18); }
-    .chip-act  { background: rgba(244,114,182,.18); }
+.legend .box {
+  width: 24px;
+  height: 14px;
+  border-radius: 4px;
+  border: 1px solid var(--panel-border);
+}
 
-    .small-note{ font-size:13px; color: var(--muted); margin-top:4px; }
+.note {
+  font-size: 12px;
+  color: var(--muted);
+}
 
-    .sched-wrap{
-      overflow:auto; border:1px solid var(--panel-border); border-radius:12px;
-      background: color-mix(in srgb, var(--panel-2) 96%, transparent);
-    }
-    table.sched{
-      width:100%; border-collapse: collapse; min-width: 980px;
-    }
-    table.sched thead th{
-      position: sticky; top: 0; z-index: 2;
-      background: color-mix(in srgb, var(--primary) 12%, transparent);
-      color: var(--ink); font-weight:700; padding:10px; font-size:14px;
-      border-bottom:1px solid var(--panel-border); text-align:left;
-    }
-    table.sched tbody td, table.sched tbody th{
-      padding:8px; border-bottom:1px solid var(--panel-border); font-size:13px; color: var(--ink);
-      vertical-align: top;
-    }
-    table.sched tbody th{
-      background: color-mix(in srgb, var(--panel-2) 96%, transparent);
-      white-space: nowrap; width: 72px; position: sticky; left: 0; z-index: 1;
-    }
+.grid-wrap {
+  overflow: auto;
+  border: 1px solid var(--panel-border);
+  border-radius: 12px;
+  background: color-mix(in srgb, var(--panel-2) 96%, transparent);
+}
 
-    .slot{
-      min-height: 40px; border-radius:8px; padding:8px; line-height:1.2;
-      background: color-mix(in srgb, var(--primary) 8%, transparent);
-      border:1px dashed var(--panel-border);
-      display:flex; flex-direction:column; gap:6px;
-    }
-    .slot.busy{ background: color-mix(in srgb, var(--primary) 16%, transparent); border-style: solid; }
-    .row{
-      display:flex; flex-direction:column; gap:2px;
-      background: color-mix(in srgb, var(--panel-2) 80%, transparent);
-      border:1px solid var(--panel-border);
-      border-radius:6px; padding:6px;
-    }
-    .tag{
-      display:inline-block; font-size:11px; font-weight:800; padding:2px 6px; border-radius:999px; letter-spacing:.2px;
-      border:1px solid var(--panel-border);
-    }
-    .tag.class{ background: rgba(96,165,250,.2); }
-    .tag.act  { background: rgba(244,114,182,.22); }
-    .subj{ font-weight:800; }
-    .meta{ font-size:12px; color: var(--muted); }
+/* Heatmap sin espacios y con números legibles */
+table.grid {
+  width: 100%;
+  min-width: 880px;
+  border-collapse: separate;
+  border-spacing: 0;
+}
 
-    #goMenu {
-    margin-left: auto;
-    background: #2563eb; 
-    color: #ffffff;
-    border: none;
-    padding: 0.6rem 1.2rem;
-    border-radius: 6px;
-    cursor: pointer;
-    font-size: 0.95rem;
-    font-weight: 600;
-    transition: 0.2s;
-    }
+table.grid thead th {
+  position: sticky;
+  top: 0;
+  z-index: 2;
+  background: color-mix(in srgb, var(--primary) 12%, transparent);
+  color: var(--ink);
+  font-weight: 700;
+  padding: 10px;
+  font-size: 14px;
+  border-bottom: 1px solid var(--panel-border);
+  text-align: left;
+}
 
-    #goMenu:hover {
-    transform: translateY(-1px);
-    }
-    
-    /* Estilos mejorados pero sencillos para la barra de búsqueda */
+table.grid tbody th {
+  padding: 10px;
+  border-bottom: 1px solid var(--panel-border);
+  font-size: 14px;
+  color: var(--ink);
+  background: color-mix(in srgb, var(--panel-2) 96%, transparent);
+  white-space: nowrap;
+  width: 72px;
+  position: sticky;
+  left: 0;
+  z-index: 1;
+}
+
+table.grid tbody td {
+  padding: 0;
+  border-bottom: 1px solid var(--panel-border);
+}
+
+.cell {
+  display: block;
+  width: 100%;
+  height: 42px;
+  line-height: 42px;
+  text-align: center;
+  border-radius: 0;
+  border: none;
+  margin: 0;
+  box-shadow: none;
+  font-weight: 800;
+  font-size: 14px;
+  color: #fff;
+  text-shadow: 0 1px 1px rgba(0, 0, 0, .45);
+  letter-spacing: .2px;
+}
+
+/* Cabecera del docente con chips de horas */
+.teacher-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  flex-wrap: wrap;
+  margin-top: 18px;
+}
+
+.teacher-title {
+  font-weight: 800;
+  color: var(--ink);
+  font-size: 20px;
+}
+
+.teacher-chips {
+  display: flex;
+  gap: 8px;
+  align-items: center;
+}
+
+.chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 6px 10px;
+  border-radius: 999px;
+  border: 1px solid var(--panel-border);
+  font-size: 13px;
+  font-weight: 800;
+  letter-spacing: .2px;
+}
+
+.chip i {
+  font-size: 14px;
+}
+
+.chip-class {
+  background: rgba(96, 165, 250, .18);
+}
+
+.chip-act {
+  background: rgba(244, 114, 182, .18);
+}
+
+.small-note {
+  font-size: 13px;
+  color: var(--muted);
+  margin-top: 4px;
+}
+
+.sched-wrap {
+  overflow: auto;
+  border: 1px solid var(--panel-border);
+  border-radius: 12px;
+  background: color-mix(in srgb, var(--panel-2) 96%, transparent);
+}
+
+table.sched {
+  width: 100%;
+  border-collapse: collapse;
+  min-width: 980px;
+}
+
+table.sched thead th {
+  position: sticky;
+  top: 0;
+  z-index: 2;
+  background: color-mix(in srgb, var(--primary) 12%, transparent);
+  color: var(--ink);
+  font-weight: 700;
+  padding: 10px;
+  font-size: 14px;
+  border-bottom: 1px solid var(--panel-border);
+  text-align: left;
+}
+
+table.sched tbody td,
+table.sched tbody th {
+  padding: 8px;
+  border-bottom: 1px solid var(--panel-border);
+  font-size: 13px;
+  color: var(--ink);
+  vertical-align: top;
+}
+
+table.sched tbody th {
+  background: color-mix(in srgb, var(--panel-2) 96%, transparent);
+  white-space: nowrap;
+  width: 72px;
+  position: sticky;
+  left: 0;
+  z-index: 1;
+}
+
+.slot {
+  min-height: 40px;
+  border-radius: 8px;
+  padding: 8px;
+  line-height: 1.2;
+  background: color-mix(in srgb, var(--primary) 8%, transparent);
+  border: 1px dashed var(--panel-border);
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.slot.busy {
+  height:fit-content;
+  background: color-mix(in srgb, var(--primary) 16%, transparent);
+  border-style: solid;
+}
+
+.row {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  background: color-mix(in srgb, var(--panel-2) 80%, transparent);
+  border: 1px solid var(--panel-border);
+  border-radius: 6px;
+  padding: 6px;
+}
+
+.tag {
+  display: inline-block;
+  font-size: 11px;
+  font-weight: 800;
+  padding: 2px 6px;
+  border-radius: 999px;
+  letter-spacing: .2px;
+  border: 1px solid var(--panel-border);
+}
+
+.tag.class {
+  background: rgba(96, 165, 250, .2);
+}
+
+.tag.act {
+  background: rgba(244, 114, 182, .22);
+}
+
+.subj {
+  font-weight: 800;
+}
+
+.meta {
+  font-size: 12px;
+  color: var(--muted);
+}
+
+#goMenu {
+  margin-left: auto;
+  background: #2563eb;
+  color: #ffffff;
+  border: none;
+  padding: 0.6rem 1.2rem;
+  border-radius: 6px;
+  cursor: pointer;
+  font-size: 0.95rem;
+  font-weight: 600;
+  transition: 0.2s;
+}
+
+#goMenu:hover {
+  transform: translateY(-1px);
+}
+
+/* Estilos mejorados pero sencillos para la barra de búsqueda */
 .search-container {
   position: relative;
   flex: 1;
@@ -275,8 +422,13 @@
 }
 
 @keyframes spin {
-  from { transform: rotate(0deg); }
-  to { transform: rotate(360deg); }
+  from {
+    transform: rotate(0deg);
+  }
+
+  to {
+    transform: rotate(360deg);
+  }
 }
 
 /* Mejorar el toolbar */
@@ -295,13 +447,13 @@
     flex: 1 1 100%;
     order: -1;
   }
-  
+
   .toolbar {
     flex-direction: column;
     align-items: stretch;
     gap: 10px;
   }
-  
+
   #goMenu {
     margin-left: 0;
     align-self: flex-end;
@@ -318,4 +470,132 @@
 .input-group.success {
   border-color: #10b981;
   box-shadow: 0 0 0 3px rgba(16, 185, 129, 0.15);
+}
+
+/* Solo en tabla sched: altura mínima pero expandible según contenido */
+table.sched tbody td {
+  padding: 23px;
+  border-bottom: 1px solid var(--panel-border);
+  font-size: 13px;
+  color: var(--ink);
+  vertical-align: top;
+  min-height: 64px;
+  height: auto;
+  position: relative;
+}
+
+table.sched tbody th {
+  padding: 19px;
+  border-bottom: 1px solid var(--panel-border);
+  font-size: 13px;
+  color: var(--ink);
+  background: color-mix(in srgb, var(--panel-2) 96%, transparent);
+  white-space: nowrap;
+  width: 72px;
+  position: sticky;
+  left: 0;
+  z-index: 1;
+  min-height: 64px;
+  height: auto;
+  vertical-align: top;
+}
+
+/* Solo en tabla sched: eliminar padding cuando hay slot busy */
+table.sched tbody td:has(.slot.busy) {
+  padding: 0;
+}
+
+/* Slot normal (se mantiene igual) */
+.slot {
+  min-height: 40px;
+  border-radius: 8px;
+  padding: 8px;
+  line-height: 1.2;
+  background: color-mix(in srgb, var(--primary) 8%, transparent);
+  border: 1px dashed var(--panel-border);
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  box-sizing: border-box;
+}
+
+/* Solo en tabla sched: slot busy se adapta al contenido */
+table.sched .slot.busy {
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  min-height: 64px;
+  height: 100%;
+  background: color-mix(in srgb, var(--primary) 16%, transparent);
+  border-style: solid;
+  border-radius: 0;
+  margin: 0;
+  padding: 4px;
+  display: flex;
+  flex-direction: column;
+  justify-content: flex-start;
+}
+
+/* Para bloques consolidados en tabla sched: se adapta al contenido */
+table.sched .slot.busy.consolidated-block {
+  border-radius: 6px;
+  top: 2px;
+  left: 2px;
+  right: 2px;
+  bottom: 2px;
+  min-height: calc(64px - 4px);
+  height: calc(100% - 4px);
+  padding: 6px;
+}
+
+/* El row dentro de slot busy se ajusta al alto disponible */
+table.sched .slot.busy .row {
+  flex: 1;
+  margin: 0;
+  height: 100%;
+  display: flex;
+  flex-direction: column;
+  justify-content: flex-start;
+  gap: 3px;
+  background: color-mix(in srgb, var(--panel-2) 80%, transparent);
+  border: 1px solid var(--panel-border);
+  border-radius: 6px;
+  padding: 6px;
+  box-sizing: border-box;
+}
+
+/* Ajustar elementos dentro del row para mejor legibilidad con texto largo */
+table.sched .slot.busy .row .tag {
+  margin-bottom: 1px;
+  font-size: 10px;
+  padding: 1px 5px;
+}
+
+table.sched .slot.busy .row .subj {
+  font-size: 12px;
+  line-height: 1.1;
+  margin-bottom: 2px;
+  font-weight: 700;
+  word-wrap: break-word;
+  overflow-wrap: break-word;
+  hyphens: auto;
+}
+
+table.sched .slot.busy .row .meta {
+  font-size: 10px;
+  line-height: 1.1;
+  margin-bottom: 2px;
+  word-wrap: break-word;
+  overflow-wrap: break-word;
+  white-space: normal;
+  hyphens: auto;
+}
+
+table.sched .slot.busy .row .time-range {
+  font-size: 10px;
+  font-weight: 600;
+  color: var(--muted);
+  margin-top: 2px;
 }

@@ -36,21 +36,357 @@ function colorNivel(n) {
 
 // ===== Función para color gradual del heatmap =====
 function getHeatmapColor(percentage, maxPercentage) {
-  // Normalizar el porcentaje de 0 a 1
   const normalized = percentage / maxPercentage;
   
-  // Interpolación de verde (120°) a rojo (0°) en HSL
-  // Verde: hsl(120, 70%, 50%) -> Rojo: hsl(0, 70%, 50%)
-  const hue = 120 * (1 - normalized); // De 120 (verde) a 0 (rojo)
+  const hue = 120 * (1 - normalized);
   const saturation = 70;
   const lightness = 50;
   
   return `hsl(${hue}, ${saturation}%, ${lightness}%)`;
 }
 
+// ========= FUNCIÓN PARA GENERAR HORARIO DEL ESTUDIANTE =========
+function generarHorarioEstudiante(recordsEstudiante, horariosData) {
+  const periodos = Array.from(new Set(recordsEstudiante.map(r => r.PERIODO))).sort(cmpPeriodo);
+  const ultimoPeriodo = periodos[periodos.length - 1];
+  
+  if (!ultimoPeriodo) return null;
+  
+  const materiasUltimoPeriodo = recordsEstudiante
+    .filter(r => r.PERIODO === ultimoPeriodo)
+    .map(r => ({
+      materia: norm(r.MATERIA),
+      grupo: norm(r['GRUPO/PARALELO'])
+    }));
+  
+  if (materiasUltimoPeriodo.length === 0) return null;
+  
+  const horariosEstudiante = [];
+  
+  materiasUltimoPeriodo.forEach(({ materia, grupo }) => {
+    const horarioMateria = horariosData.find(h => 
+      norm(h.MATERIA) === materia && 
+      norm(h.GRUPO) === grupo &&
+      norm(h.PERIODO) === ultimoPeriodo
+    );
+    
+    if (horarioMateria) {
+      horariosEstudiante.push({
+        materia: materia,
+        grupo: grupo,
+        docente: norm(horarioMateria.DOCENTE),
+        horarios: {
+          LUNES: norm(horarioMateria.LUNES),
+          MARTES: norm(horarioMateria.MARTES),
+          MIERCOLES: norm(horarioMateria.MIERCOLES),
+          JUEVES: norm(horarioMateria.JUEVES),
+          VIERNES: norm(horarioMateria.VIERNES),
+          SABADO: norm(horarioMateria.SABADO),
+        }
+      });
+    }
+  });
+  
+  return {
+    periodo: ultimoPeriodo,
+    materias: horariosEstudiante
+  };
+}
+
+function renderHorarioEstudiante(horarioData) {
+  if (!horarioData || horarioData.materias.length === 0) {
+    return `
+      <div class="chart-section" style="margin-top: 20px;">
+        <h3>Horario del Último Período</h3>
+        <p class="muted">No se encontró información de horario para el último período.</p>
+      </div>
+    `;
+  }
+
+  const dias = ['LUNES', 'MARTES', 'MIERCOLES', 'JUEVES', 'VIERNES', 'SABADO'];
+  const diasDisplay = ['Lun', 'Mar', 'Mié', 'Jue', 'Vie', 'Sáb'];
+
+  function parseHorario(horarioStr) {
+    if (!horarioStr || horarioStr === '-') return [];
+    
+    const intervalos = [];
+    const horarios = horarioStr.split(',').map(h => h.trim());
+    
+    horarios.forEach(horario => {
+      const match = horario.match(/(\d{1,2}):(\d{2})\s*-\s*(\d{1,2}):(\d{2})/);
+      if (match) {
+        const [, h1, m1, h2, m2] = match;
+        const inicio = parseInt(h1) * 60 + parseInt(m1);
+        const fin = parseInt(h2) * 60 + parseInt(m2);
+        
+        for (let minutos = inicio; minutos < fin; minutos += 60) {
+          const hora = Math.floor(minutos / 60);
+          intervalos.push(`${hora.toString().padStart(2, '0')}:00`);
+        }
+      }
+    });
+    
+    return intervalos;
+  }
+
+  function generarHorasCompletas() {
+    const horas = [];
+    for (let hora = 7; hora <= 22; hora++) {
+      horas.push(`${hora.toString().padStart(2, '0')}:00`);
+    }
+    return horas;
+  }
+
+  const horarioMap = {};
+  horarioData.materias.forEach(materia => {
+    dias.forEach(dia => {
+      const intervalos = parseHorario(materia.horarios[dia]);
+      intervalos.forEach(intervalo => {
+        if (!horarioMap[dia]) horarioMap[dia] = {};
+        if (!horarioMap[dia][intervalo]) horarioMap[dia][intervalo] = [];
+        horarioMap[dia][intervalo].push(materia);
+      });
+    });
+  });
+
+  function agruparBloques(dia, todasLasHoras) {
+    const bloques = [];
+    let bloqueActual = null;
+    
+    todasLasHoras.forEach((hora, index) => {
+      const materiasEnHora = horarioMap[dia] && horarioMap[dia][hora] ? horarioMap[dia][hora] : [];
+      
+      if (materiasEnHora.length === 0) {
+        if (bloqueActual) {
+          bloques.push(bloqueActual);
+          bloqueActual = null;
+        }
+        bloques.push({ tipo: 'vacio', hora: hora, rowspan: 1 });
+      } else if (materiasEnHora.length === 1) {
+        const materia = materiasEnHora[0];
+        
+        if (bloqueActual && 
+            bloqueActual.materia.materia === materia.materia && 
+            bloqueActual.materia.grupo === materia.grupo) {
+          bloqueActual.rowspan += 1;
+          bloqueActual.horaFin = hora;
+        } else {
+          if (bloqueActual) {
+            bloques.push(bloqueActual);
+          }
+          bloqueActual = {
+            tipo: 'materia',
+            materia: materia,
+            hora: hora,
+            horaFin: hora,
+            rowspan: 1
+          };
+        }
+      } else {
+        if (bloqueActual) {
+          bloques.push(bloqueActual);
+          bloqueActual = null;
+        }
+        bloques.push({ 
+          tipo: 'multiple', 
+          materias: materiasEnHora, 
+          hora: hora, 
+          rowspan: 1 
+        });
+      }
+    });
+    
+    if (bloqueActual) {
+      bloques.push(bloqueActual);
+    }
+    
+    return bloques;
+  }
+
+  const todasLasHoras = generarHorasCompletas();
+  
+  const bloquesPorDia = {};
+  dias.forEach(dia => {
+    bloquesPorDia[dia] = agruparBloques(dia, todasLasHoras);
+  });
+
+  let tablaHorario = `
+    <div class="chart-section" style="margin-top: 20px;">
+      <h3>Horario del Período ${horarioData.periodo}</h3>
+      <div style="overflow-x: auto; width: 100%;">
+        <table class="striped" style="width: 100%; border-collapse: collapse;">
+          <thead>
+            <tr>
+              <th style="text-align: center; min-width: 80px; font-weight: 700;">Hora</th>
+              ${diasDisplay.map(dia => 
+                `<th style="text-align: center; min-width: 143px; font-weight: 700;">${dia}</th>`
+              ).join('')}
+            </tr>
+          </thead>
+          <tbody>
+  `;
+
+  const bloquesRenderizados = {};
+  dias.forEach(dia => {
+    bloquesRenderizados[dia] = {};
+  });
+
+  const horasOcupadas = new Set();
+  dias.forEach(dia => {
+    bloquesPorDia[dia].forEach(bloque => {
+      if (bloque.tipo !== 'vacio') {
+        horasOcupadas.add(bloque.hora);
+        if (bloque.rowspan > 1) {
+          const inicioIndex = todasLasHoras.indexOf(bloque.hora);
+          for (let i = 0; i < bloque.rowspan; i++) {
+            if (todasLasHoras[inicioIndex + i]) {
+              horasOcupadas.add(todasLasHoras[inicioIndex + i]);
+            }
+          }
+        }
+      }
+    });
+  });
+
+  let primeraHora = '07:00';
+  let ultimaHora = '07:00';
+  
+  if (horasOcupadas.size > 0) {
+    const horasOrdenadas = Array.from(horasOcupadas).sort();
+    ultimaHora = horasOrdenadas[horasOrdenadas.length - 1];
+  }
+
+  const indiceUltimaHora = todasLasHoras.indexOf(ultimaHora);
+  const horasAMostrar = todasLasHoras.slice(0, Math.min(indiceUltimaHora + 3, todasLasHoras.length));
+
+  horasAMostrar.forEach((hora, horaIndex) => {
+    tablaHorario += `<tr>`;
+    tablaHorario += `<td style="font-weight: 600; text-align: center; background: color-mix(in srgb, var(--card) 96%, transparent); border-right: 2px solid var(--border); padding: 12px 8px;">${hora}</td>`;
+    
+    dias.forEach((dia, diaIndex) => {
+      const bloque = bloquesPorDia[dia].find(b => b.hora === hora || 
+        (b.rowspan > 1 && todasLasHoras.indexOf(b.hora) <= todasLasHoras.indexOf(hora) && 
+         todasLasHoras.indexOf(b.hora) + b.rowspan > todasLasHoras.indexOf(hora)));
+      
+      const esInicioBloque = bloque && bloque.hora === hora;
+      
+      if (esInicioBloque && !bloquesRenderizados[dia][bloque.hora]) {
+        bloquesRenderizados[dia][bloque.hora] = true;
+        
+        let contenidoCelda = '';
+        const alturaMinima = bloque.rowspan * 60;
+        let estilosCelda = `padding: 4px; vertical-align: middle; min-width: 140px; text-align: center; border-left: 1px solid var(--border); height: ${alturaMinima}px;`;
+        
+        if (bloque.tipo === 'materia') {
+          const materia = bloque.materia;
+          const nombreCompleto = materia.materia;
+          
+          contenidoCelda = `
+            <div style="
+              background: color-mix(in srgb, var(--accent) 20%, transparent);
+              border: 2px solid var(--accent);
+              border-radius: 10px;
+              padding: 12px 10px;
+              font-size: 12px;
+              line-height: 1.4;
+              height: calc(100% - 8px);
+              min-height: ${alturaMinima - 8}px;
+              display: flex;
+              flex-direction: column;
+              justify-content: center;
+              box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+              word-wrap: break-word;
+              overflow-wrap: break-word;
+            ">
+              <div style="
+                font-weight: 700; 
+                color: var(--text); 
+                margin-bottom: 10px; 
+                font-size: 13px;
+                text-align: center;
+                word-wrap: break-word;
+                line-height: 1.3;
+              ">${nombreCompleto}</div>
+              <div style="color: var(--text-secondary); font-size: 11px; margin-bottom: 6px; text-align: center;">Grupo: ${materia.grupo}</div>
+              <div style="color: var(--accent); font-size: 10px; font-weight: 600; margin-top: 6px; text-align: center; font-style: italic;">Docente: ${materia.docente}</div>
+            </div>
+          `;
+        } else if (bloque.tipo === 'multiple') {
+          contenidoCelda = bloque.materias.map(materia => {
+            const nombreCompleto = materia.materia;
+            return `
+              <div style="
+                background: color-mix(in srgb, var(--accent) 15%, transparent);
+                border: 1px solid var(--accent);
+                border-radius: 8px;
+                padding: 10px 8px;
+                margin: 4px 0;
+                font-size: 11px;
+                line-height: 1.3;
+                word-wrap: break-word;
+                overflow-wrap: break-word;
+              ">
+                <div style="
+                  font-weight: 600; 
+                  color: var(--text); 
+                  margin-bottom: 4px;
+                  text-align: center;
+                  word-wrap: break-word;
+                  line-height: 1.2;
+                ">${nombreCompleto}</div>
+                <div style="color: var(--text-secondary); font-size: 10px; text-align: center; margin-bottom: 3px;">Gr: ${materia.grupo}</div>
+                <div style="color: var(--accent); font-size: 9px; text-align: center; font-style: italic;">Docente: ${materia.docente}</div>
+              </div>
+            `;
+          }).join('');
+        } else {
+          contenidoCelda = '';
+        }
+        
+        tablaHorario += `<td style="${estilosCelda}" rowspan="${bloque.rowspan}">
+          ${contenidoCelda}
+        </td>`;
+      } else if (!bloque || (bloque && bloque.hora !== hora && todasLasHoras.indexOf(bloque.hora) > todasLasHoras.indexOf(hora))) {
+        const hayBloqueAnterior = bloquesPorDia[dia].some(b => 
+          b.rowspan > 1 && 
+          todasLasHoras.indexOf(b.hora) < todasLasHoras.indexOf(hora) &&
+          todasLasHoras.indexOf(b.hora) + b.rowspan > todasLasHoras.indexOf(hora)
+        );
+        
+        if (!hayBloqueAnterior) {
+          tablaHorario += `<td style="padding: 15px 8px; vertical-align: middle; min-width: 140px; border-left: 1px solid var(--border); background: color-mix(in srgb, var(--muted) 5%, transparent); height: 60px;"></td>`;
+        }
+      }
+    });
+    tablaHorario += `</tr>`;
+  });
+
+  tablaHorario += `
+          </tbody>
+        </table>
+      </div>
+      <span style="color: var(--primary); font-size: 16px; font-weight: 600; display: block; margin-top: 15px;">Materias del Período:</span>
+      <div style="margin-top: 20px;">
+        <div style="display: grid; grid-template-columns: repeat(2, 1fr); gap: 16px; width: 100%;">
+          ${horarioData.materias.map(materia => `
+            <div style="padding: 12px 16px; background: color-mix(in srgb, var(--card) 96%, transparent); border: 1px solid var(--border); border-radius: 8px; font-size: 12px; box-shadow: 0 1px 3px rgba(0,0,0,0.05);">
+              <div style="font-weight: 600; color: var(--text); margin-bottom: 3px; line-height: 1.3; font-size: 13px;">${materia.materia}</div>
+              <div class="muted" style="font-size: 11px; line-height: 1.3;">
+                <div style="margin-bottom: 1px;">Grupo: ${materia.grupo}</div>
+                <div>Docente: ${materia.docente}</div>
+              </div>
+            </div>
+          `).join('')}
+        </div>
+      </div>
+  `;
+
+  return tablaHorario;
+}
+
+
 // ========= SISTEMA DE AUTOCOMPLETADO PARA ESTUDIANTES =========
 function initStudentAutocomplete(dataFiltrada, studentFilterInput, onSearch) {
-  // Crear lista única de estudiantes
   const estudiantesMap = new Map();
   
   dataFiltrada.forEach(record => {
@@ -70,7 +406,6 @@ function initStudentAutocomplete(dataFiltrada, studentFilterInput, onSearch) {
   
   const listaEstudiantes = Array.from(estudiantesMap.values());
   
-  // Crear dropdown para estudiantes
   const dropdown = document.createElement('div');
   dropdown.className = 'autocomplete-dropdown';
   dropdown.style.cssText = `
@@ -89,7 +424,6 @@ function initStudentAutocomplete(dataFiltrada, studentFilterInput, onSearch) {
     margin-top: 4px;
   `;
 
-  // Agregar estilos CSS para el dropdown
   if (!document.querySelector('#student-autocomplete-styles')) {
     const style = document.createElement('style');
     style.id = 'student-autocomplete-styles';
@@ -112,7 +446,6 @@ function initStudentAutocomplete(dataFiltrada, studentFilterInput, onSearch) {
     dropdown.appendChild(style);
   }
 
-  // Insertar dropdown después del input
   const container = studentFilterInput.parentElement;
   if (container.style.position !== 'relative' && container.style.position !== 'absolute') {
     container.style.position = 'relative';
@@ -120,7 +453,6 @@ function initStudentAutocomplete(dataFiltrada, studentFilterInput, onSearch) {
   container.appendChild(dropdown);
 
   function showDropdown(filteredEstudiantes) {
-    // Limpiar contenido previo pero mantener el style
     const existingStyle = dropdown.querySelector('style');
     dropdown.innerHTML = '';
     if (existingStyle) dropdown.appendChild(existingStyle);
@@ -143,17 +475,10 @@ function initStudentAutocomplete(dataFiltrada, studentFilterInput, onSearch) {
         background: transparent;
       `;
       
-      // Remover borde del último item
       if (index === filteredEstudiantes.slice(0, 10).length - 1) {
         item.style.borderBottom = 'none';
       }
       
-      /* Truncar carrera si es muy larga
-      const carreraCorta = estudiante.carrera.length > 30 
-        ? estudiante.carrera.substring(0, 30) + '...' 
-        : estudiante.carrera;
-      */
-     
       item.innerHTML = `
         <div style="font-weight: 600; margin-bottom: 2px; line-height: 1.3;">${estudiante.nombre}</div>
         <div class="item-id" style="font-size: 12px; color: var(--muted); opacity: 0.9; line-height: 1.2;">
@@ -161,7 +486,6 @@ function initStudentAutocomplete(dataFiltrada, studentFilterInput, onSearch) {
         </div>
       `;
 
-      // Hover effect
       item.addEventListener('mouseenter', () => {
         item.style.backgroundColor = 'color-mix(in srgb, var(--accent) 12%, transparent)';
       });
@@ -172,7 +496,6 @@ function initStudentAutocomplete(dataFiltrada, studentFilterInput, onSearch) {
         }
       });
 
-      // Click para seleccionar
       item.addEventListener('click', () => {
         studentFilterInput.value = estudiante.nombre;
         hideDropdown();
@@ -194,7 +517,6 @@ function initStudentAutocomplete(dataFiltrada, studentFilterInput, onSearch) {
     
     const queryCanon = canon(query);
     return listaEstudiantes.filter(estudiante => {
-      // Buscar por ID (exacto) o por nombre (contiene)
       return estudiante.id.includes(query.trim()) || 
              estudiante.canonNombre.includes(queryCanon);
     });
@@ -213,7 +535,6 @@ function initStudentAutocomplete(dataFiltrada, studentFilterInput, onSearch) {
   });
 
   studentFilterInput?.addEventListener('blur', (e) => {
-    // Delay para permitir click en dropdown
     setTimeout(() => {
       hideDropdown();
     }, 200);
@@ -227,7 +548,6 @@ function initStudentAutocomplete(dataFiltrada, studentFilterInput, onSearch) {
     }
   });
 
-  // Navegación con teclado
   studentFilterInput?.addEventListener('keydown', (e) => {
     const items = dropdown.querySelectorAll('.dropdown-item');
     let currentSelected = dropdown.querySelector('.selected');
@@ -243,10 +563,8 @@ function initStudentAutocomplete(dataFiltrada, studentFilterInput, onSearch) {
           if (idEl) idEl.style.color = 'rgba(255,255,255,0.9)';
         }
       } else {
-        // Remover selección actual
         currentSelected.classList.remove('selected');
         currentSelected.style.backgroundColor = '';
-        // Detectar modo oscuro para aplicar color correcto
         const isDark = window.matchMedia('(prefers-color-scheme: dark)').matches || 
                       document.body.classList.contains('dark') || 
                       document.documentElement.getAttribute('data-theme') === 'dark';
@@ -257,7 +575,6 @@ function initStudentAutocomplete(dataFiltrada, studentFilterInput, onSearch) {
           currentIdEl.style.color = isDark ? 'var(--muted-foreground, #94a3b8)' : 'var(--muted-foreground, #64748b)';
         }
         
-        // Seleccionar siguiente
         const nextIndex = Array.from(items).indexOf(currentSelected) + 1;
         const nextItem = nextIndex < items.length ? items[nextIndex] : items[0];
         nextItem.classList.add('selected');
@@ -266,7 +583,6 @@ function initStudentAutocomplete(dataFiltrada, studentFilterInput, onSearch) {
         const nextIdEl = nextItem.querySelector('.item-id');
         if (nextIdEl) nextIdEl.style.color = 'rgba(255,255,255,0.9)';
         
-        // Scroll automático si es necesario
         nextItem.scrollIntoView({ block: 'nearest', behavior: 'smooth' });
       }
     } else if (e.key === 'ArrowUp') {
@@ -282,10 +598,8 @@ function initStudentAutocomplete(dataFiltrada, studentFilterInput, onSearch) {
           lastItem.scrollIntoView({ block: 'nearest', behavior: 'smooth' });
         }
       } else {
-        // Remover selección actual
         currentSelected.classList.remove('selected');
         currentSelected.style.backgroundColor = '';
-        // Detectar modo oscuro para aplicar color correcto
         const isDarkUp = window.matchMedia('(prefers-color-scheme: dark)').matches || 
                         document.body.classList.contains('dark') || 
                         document.documentElement.getAttribute('data-theme') === 'dark';
@@ -296,7 +610,6 @@ function initStudentAutocomplete(dataFiltrada, studentFilterInput, onSearch) {
           currentIdEl.style.color = isDarkUp ? 'var(--muted-foreground, #94a3b8)' : 'var(--muted-foreground, #64748b)';
         }
         
-        // Seleccionar anterior
         const prevIndex = Array.from(items).indexOf(currentSelected) - 1;
         const prevItem = prevIndex >= 0 ? items[prevIndex] : items[items.length - 1];
         prevItem.classList.add('selected');
@@ -305,7 +618,6 @@ function initStudentAutocomplete(dataFiltrada, studentFilterInput, onSearch) {
         const prevIdEl = prevItem.querySelector('.item-id');
         if (prevIdEl) prevIdEl.style.color = 'rgba(255,255,255,0.9)';
         
-        // Scroll automático si es necesario
         prevItem.scrollIntoView({ block: 'nearest', behavior: 'smooth' });
       }
     } else if (e.key === 'Enter') {
@@ -321,7 +633,6 @@ function initStudentAutocomplete(dataFiltrada, studentFilterInput, onSearch) {
     }
   });
 
-  // Cerrar dropdown al hacer click fuera
   document.addEventListener('click', (e) => {
     if (!studentFilterInput.contains(e.target) && !dropdown.contains(e.target)) {
       hideDropdown();
@@ -331,7 +642,6 @@ function initStudentAutocomplete(dataFiltrada, studentFilterInput, onSearch) {
 
 // ========= CÓDIGO PRINCIPAL =========
 document.addEventListener('DOMContentLoaded', async () => {
-  // ---- DOM ----
   const chartDistribucionCanvas = document.getElementById('chartDistribucionPromedios');
   const studentFilterInput = document.getElementById('studentFilter');
   const searchButton = document.getElementById('searchButton');
@@ -357,11 +667,87 @@ document.addEventListener('DOMContentLoaded', async () => {
     return;
   }
 
+  const keyHorarios = 'academicTrackingData_REPORTE_NOMINA_CARRERA_DOCENTES_MATERIA___HORARIOS_xlsx';
+  const horariosData = await loadData(keyHorarios);
+  if (!Array.isArray(horariosData)) {
+    console.warn("⚠️ No se pudieron cargar los datos de horarios desde IndexedDB");
+  }
+
+const keyEstudiantes = 'academicTrackingData_REPORTE_NOMINA_ESTUDIANTES_MATRICULADOS_LEGALIZADOS_xlsx';
+const estudiantesData = await loadData(keyEstudiantes);
+if (!Array.isArray(estudiantesData)) {
+  console.warn("⚠️ No se pudieron cargar los datos de estudiantes matriculados desde IndexedDB");
+}
+
+const estudiantesMap = new Map();
+if (Array.isArray(estudiantesData)) {
+  estudiantesData.forEach(est => {
+    const id = norm(est.IDENTIFICACION);
+    if (id) {
+      const fechaNacimiento = norm(est['FECHA NACIMIENTO']);
+      let edad = null;
+      
+      // Calcular edad si existe fecha de nacimiento
+      if (fechaNacimiento) {
+        let fechaNac;
+        
+        // Manejar formato DD/MM/YYYY (día/mes/año)
+        if (typeof fechaNacimiento === 'string' && fechaNacimiento.includes('/')) {
+          const partes = fechaNacimiento.split('/');
+          if (partes.length === 3) {
+            const dia = partes[0].padStart(2, '0');   // Primer elemento es el día
+            const mes = partes[1].padStart(2, '0');   // Segundo elemento es el mes
+            const año = partes[2];                    // Tercer elemento es el año
+            
+            // Crear fecha en formato ISO (YYYY-MM-DD) para evitar confusiones
+            fechaNac = new Date(`${año}-${mes}-${dia}`);
+          }
+        } else {
+          fechaNac = new Date(fechaNacimiento);
+        }
+        
+        const fechaActual = new Date();
+        
+        // Verificar que la fecha sea válida
+        if (!isNaN(fechaNac.getTime())) {
+          // Calcular diferencia de años
+          edad = fechaActual.getFullYear() - fechaNac.getFullYear();
+          
+          // Obtener mes y día actual
+          const mesActual = fechaActual.getMonth(); // 0-11 (enero=0)
+          const diaActual = fechaActual.getDate();  // 1-31
+          
+          // Obtener mes y día de nacimiento
+          const mesNacimiento = fechaNac.getMonth(); // 0-11 (enero=0)
+          const diaNacimiento = fechaNac.getDate();  // 1-31
+          
+          // Si no ha cumplido años este año, restar 1
+          if (mesActual < mesNacimiento || 
+              (mesActual === mesNacimiento && diaActual < diaNacimiento)) {
+            edad--;
+          }
+        }
+      }
+      
+      estudiantesMap.set(id, {
+        sexo: norm(est.SEXO),
+        etnia: norm(est.ETNIA),
+        discapacidad: norm(est.DISCAPACIDAD),
+        porcentajeDiscapacidad: norm(est['PORCENTAJE DISCAPACIDAD']),
+        numeroHijos: norm(est['NUMERO HIJOS']),
+        fechanac: fechaNacimiento,
+        edad: edad,
+        ciudadResidencia: norm(est['CIUDAD RESIDENCIA'])
+      });
+    }
+  });
+}
+
+
   backToMenuButton.addEventListener('click', () => {
     window.location.href = '../index.html';
   });
 
-  // filtros globales
   const ESTADOS_PERMITIDOS = new Set(['APROBADA', 'REPROBADA']);
   const DOCENTES_EXCLUIDOS = new Set(['MOVILIDAD']);
   const MATERIAS_REGEX_EXCLUIR = [/^INGLES\s+(I|II|III|IV)\b$/];
@@ -375,10 +761,8 @@ document.addEventListener('DOMContentLoaded', async () => {
     return true;
   });
 
-  // Inicializar autocompletado para estudiantes
   initStudentAutocomplete(dataFiltrada, studentFilterInput, buscar);
 
-  // ====== Gráficos globales ======
   const estudiantesPorPeriodo = {};
   dataFiltrada.forEach(e => {
     const id = e.IDENTIFICACION, per = e.PERIODO, pr = asNum(e.PROMEDIO);
@@ -636,24 +1020,149 @@ document.addEventListener('DOMContentLoaded', async () => {
     const cedula = norm(first.IDENTIFICACION);
     const correos = Array.from(new Set(records.flatMap(r => [norm(r.CORREO_INSTITUCIONAL), norm(r.CORREO_PERSONAL)]).filter(Boolean))).join(', ').toLowerCase();
     const telefono = norm(first.CELULAR);
+    const carrera = norm(first.CARRERA);
     const aprobadas = records.filter(r => canon(r.ESTADO) === 'APROBADA').length;
     const reprobadas = records.filter(r => canon(r.ESTADO) === 'REPROBADA').length;
 
+    const datosAdicionales = estudiantesMap.get(cedula) || {};
+    const sexo = datosAdicionales.sexo || '-';
+    const etnia = datosAdicionales.etnia || '-';
+    const discapacidad = datosAdicionales.discapacidad || '-';
+    const porcentajeDiscapacidad = datosAdicionales.porcentajeDiscapacidad || '';
+    const numeroHijos = datosAdicionales.numeroHijos || '-';
+    const fechaNacimiento = datosAdicionales.fechanac || '-';
+    const edad = datosAdicionales.edad || '-';
+    const ciudadResidencia = datosAdicionales.ciudadResidencia || '-';
+
+    const discapacidadCompleta = discapacidad !== '-' && porcentajeDiscapacidad 
+      ? `${discapacidad} (${porcentajeDiscapacidad}%)`
+      : discapacidad;
+
     const periodos = Array.from(new Set(records.map(r => r.PERIODO))).sort(cmpPeriodo);
     
-    // Calcular promedio general de TODOS los períodos
     const todosLosPromedios = records.map(r => asNum(r.PROMEDIO)).filter(v => v !== null);
     const promedioGeneral = todosLosPromedios.length 
       ? (todosLosPromedios.reduce((a, b) => a + b, 0) / todosLosPromedios.length) 
       : null;
 
     studentHeading.textContent = `Datos Generales de ${nombre}`;
+    
+    // Crear la URL de la foto usando la cédula
+    const fotoUrl = `http://67.205.132.245/get_photoSIUG.php?cedula=${cedula}`;
+    
     studentInfoBody.innerHTML = `
-      <tr><th style="width:160px;">Cédula</th><td>${cedula || '-'}</td><th>Nombre</th><td>${nombre || '-'}</td></tr>
-      <tr><th>Correos</th><td>${correos || '-'}</td><th>Teléfonos</th><td>${telefono || '-'}</td></tr>
-      <tr><th>Promedio general</th><td>${promedioGeneral !== null ? promedioGeneral.toFixed(2) : '-'}</td><th>Veces Reprobadas</th><td>${reprobadas}</td></tr>
-      <tr><th>Materias Aprobadas</th><td>${aprobadas}</td><th></th><td></td></tr>
+      <tr>
+        <td colspan="4" style="text-align: center; padding: 20px 10px; background: color-mix(in srgb, var(--card) 98%, transparent);">
+          <div style="display: flex; align-items: flex-start; gap: 25px; justify-content: center; flex-wrap: wrap;">
+            <!-- Logo FACAF -->
+            <div style="flex-shrink: 0; margin-left: 40px;">
+              <style>
+                .logo-container .logo-light { display: block; }
+                .logo-container .logo-dark { display: none; }
+                .dark-mode .logo-container .logo-light,
+                html.dark-mode .logo-container .logo-light { display: none; }
+                .dark-mode .logo-container .logo-dark,
+                html.dark-mode .logo-container .logo-dark { display: block; }
+              </style>
+              <div class="logo-container">
+                <img 
+                  src="../recursos/FACAF-CUADRADO.png" 
+                  style="
+                    width: 200px;
+                    height: 200px;
+                    object-fit: contain;
+                  " 
+                  alt="Logo FACAF"
+                  class="logo-light"
+                />
+                <img 
+                  src="../recursos/FACAF-CUADRADO-NEGATIVO.png" 
+                  style="
+                    width: 200px;
+                    height: 200px;
+                    object-fit: contain;
+                  " 
+                  alt="Logo FACAF"
+                  class="logo-dark"
+                />
+              </div>
+            </div>
+            
+            <!-- Foto del estudiante -->
+            <div style="flex-shrink: 0;">
+              <img 
+                src="${fotoUrl}" 
+                width="150px" 
+                style="
+                  border-radius: 12px; 
+                  box-shadow: 0 4px 12px rgba(0,0,0,0.15); 
+                  border: 3px solid var(--border);
+                  object-fit: cover;
+                  height: 180px;
+                  width: 150px;
+                " 
+                alt="Foto de ${nombre}"
+                onerror="this.style.display='none'; this.nextElementSibling.style.display='flex';"
+              />
+              <div style="
+                display: none;
+                width: 150px;
+                height: 180px;
+                background: color-mix(in srgb, var(--muted) 20%, transparent);
+                border: 2px dashed var(--border);
+                border-radius: 12px;
+                align-items: center;
+                justify-content: center;
+                color: var(--muted-foreground);
+                font-size: 12px;
+                text-align: center;
+                flex-direction: column;
+                gap: 8px;
+              ">
+                <svg width="24" height="24" fill="currentColor" viewBox="0 0 24 24">
+                  <path d="M12 2C13.1 2 14 2.9 14 4C14 5.1 13.1 6 12 6C10.9 6 10 5.1 10 4C10 2.9 10.9 2 12 2ZM21 9V7L15 1H5C3.89 1 3 1.89 3 3V19A2 2 0 0 0 5 21H19A2 2 0 0 0 21 19V9M19 9H14V4H19V9Z"/>
+                </svg>
+                <span>Foto no<br/>disponible</span>
+              </div>
+            </div>
+            
+            <!-- Información del estudiante -->
+            <div style="flex: 1; min-width: 300px; text-align: left;">
+              <h3 style="margin: 0 0 20px 0; color: var(--primary); font-size: 22px; font-weight: 700; text-transform: uppercase;">
+                ${nombre}
+              </h3>
+              
+              <div style="display: grid; grid-template-columns: auto 1fr; gap: 12px 20px; font-size: 15px;">
+                <span style="font-weight: 700; color: var(--primary); font-size: 16px;">Cédula:</span>
+                <span style="color: var(--text); font-weight: 600; font-size: 16px;">${cedula || '-'}</span>
+                
+                <span style="font-weight: 700; color: var(--primary);">Carrera:</span>
+                <span style="color: var(--text); font-weight: 500;">${carrera || '-'}</span>
+                
+                <span style="font-weight: 700; color: var(--primary);">Promedio General:</span>
+                <span style="color: var(--primary); font-weight: 700; font-size: 16px;">${promedioGeneral !== null ? promedioGeneral.toFixed(2) : '-'}</span>
+                
+                <span style="font-weight: 700; color: var(--primary);">Aprobadas / Reprobadas:</span>
+                <span style="color: var(--text); font-weight: 600;">${aprobadas} / <span style="color: var(--destructive); font-weight: 700;">${reprobadas}</span></span>
+              </div>
+            </div>
+          </div>
+        </td>
+      </tr>
+      <tr><th style="width:160px;">Correos</th><td colspan="3">${correos || '-'}</td></tr>
+      <tr><th>Teléfono</th><td>${telefono || '-'}</td><th>Sexo</th><td>${sexo}</td></tr>
+      <tr><th>Fecha Nacimiento</th><td>${fechaNacimiento}</td><th>Edad</th><td>${edad}</td></tr>
+      <tr><th>Ciudad Residencia</th><td>${ciudadResidencia}</td><th>Etnia</th><td>${etnia}</td></tr>
+      <tr><th>Discapacidad</th><td>${discapacidadCompleta}</td><th>Número de Hijos</th><td>${numeroHijos}</td></tr>
     `;
+
+    // No necesitamos función de actualización, CSS lo maneja
+    function updateLogos() {
+        // CSS maneja automáticamente la visibilidad
+        return;
+    }
+
+    // No necesario setTimeout para logos
 
     const promsPorPeriodo = periodos.map(p => {
       const arr = records.filter(r => r.PERIODO === p).map(r => asNum(r.PROMEDIO)).filter(v => v !== null);
@@ -719,7 +1228,6 @@ document.addEventListener('DOMContentLoaded', async () => {
       }
     });
 
-    // Acordeón por período
     studentAccordion.innerHTML = '';
     [...periodos].sort(cmpPeriodo).reverse().forEach(p => {
       const rows = records.filter(r => r.PERIODO === p);
@@ -747,7 +1255,26 @@ document.addEventListener('DOMContentLoaded', async () => {
         </div>`;
       studentAccordion.appendChild(details);
     });
-  }
+
+    if (horariosData && horariosData.length > 0) {
+      const horarioEstudiante = generarHorarioEstudiante(records, horariosData);
+      const horarioHtml = renderHorarioEstudiante(horarioEstudiante);
+      
+      const horarioContainer = document.getElementById('horarioContainer') || 
+                              (() => {
+                                const div = document.createElement('div');
+                                div.id = 'horarioContainer';
+                                studentAccordion.parentNode.appendChild(div);
+                                return div;
+                              })();
+      horarioContainer.innerHTML = horarioHtml;
+    }
+
+    // Disparar evento
+    setTimeout(() => {
+      window.dispatchEvent(new CustomEvent('student-rendered'));
+    }, 100);
+}
 
   function buscar() {
     const q = studentFilterInput.value.trim();
@@ -763,24 +1290,24 @@ document.addEventListener('DOMContentLoaded', async () => {
   }
 
   function reset() {
-    // Limpiar el campo de búsqueda
     studentFilterInput.value = '';
     
-    // Ocultar dropdown del autocompletado si existe
     const dropdown = document.querySelector('.autocomplete-dropdown');
     if (dropdown) {
       dropdown.style.display = 'none';
     }
     
-    // Mostrar todas las secciones de gráficos generales
+    const horarioContainer = document.getElementById('horarioContainer');
+    if (horarioContainer) {
+      horarioContainer.innerHTML = '';
+    }
+    
     sectionDistribucion.style.display = '';
     sectionPromedioNivel.style.display = '';  
     sectionHeatmaps.style.display = '';
     
-    // Ocultar la sección del estudiante
     studentDetails.style.display = 'none';
     
-    // Destruir gráficos del estudiante para liberar memoria
     if (lineChart) { 
       lineChart.destroy(); 
       lineChart = null; 
@@ -790,11 +1317,9 @@ document.addEventListener('DOMContentLoaded', async () => {
       barsChart = null; 
     }
     
-    // Scroll al inicio
     window.scrollTo({ top: 0, behavior: 'smooth' });
   }
 
-  // eventos
   clearButton.addEventListener('click', reset);
   studentFilterInput.addEventListener('keydown', (e) => { if (e.key === 'Enter') buscar(); if (e.key === 'Escape') reset(); });
   studentFilterInput.addEventListener('input', () => { if (studentFilterInput.value.trim() === '') showGeneralView(); });

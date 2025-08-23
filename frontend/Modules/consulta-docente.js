@@ -2,9 +2,9 @@
 import { loadData } from '../indexeddb-storage.js';
 
 document.addEventListener('DOMContentLoaded', async () => {
-  const backToMenuButton   = document.getElementById('goToMenuButton');
+  const backToMenuButton = document.getElementById('goToMenuButton');
   const docenteFilterInput = document.getElementById('docenteFilter');
-  const searchButton       = document.getElementById('searchButton');
+  const searchButton = document.getElementById('searchButton');
 
   backToMenuButton?.addEventListener('click', () => {
     window.location.href = '../index.html';
@@ -85,7 +85,7 @@ document.addEventListener('DOMContentLoaded', async () => {
     let dropdown = document.getElementById('docenteDropdown');
     if (!dropdown) {
       dropdown = document.createElement('div');
-      dropdown.id = 'docenteDropdown';   
+      dropdown.id = 'docenteDropdown';
       // Posicionar el input como relativo si no lo está
       const inputContainer = docenteFilterInput.parentElement;
       if (getComputedStyle(inputContainer).position === 'static') {
@@ -103,7 +103,7 @@ document.addEventListener('DOMContentLoaded', async () => {
     const existingStyle = dropdown.querySelector('style');
     dropdown.innerHTML = '';
     if (existingStyle) dropdown.appendChild(existingStyle);
-    
+
     if (filteredDocentes.length === 0) {
       dropdown.style.display = 'none';
       return;
@@ -121,12 +121,12 @@ document.addEventListener('DOMContentLoaded', async () => {
         color: var(--text);
         background: transparent;
       `;
-      
+
       // Remover borde del último item
       if (index === filteredDocentes.slice(0, 10).length - 1) {
         item.style.borderBottom = 'none';
       }
-      
+
       item.innerHTML = `
         <div style="font-weight: 600; margin-bottom: 2px; line-height: 1.3;">${docente.nombre}</div>
         <div class="item-id" style="font-size: 12px; color: var(--muted); opacity: 0.9; line-height: 1.2;">ID: ${docente.id}</div>
@@ -137,7 +137,7 @@ document.addEventListener('DOMContentLoaded', async () => {
         item.style.backgroundColor = 'color-mix(in srgb, var(--accent) 12%, transparent)';
         // No cambiar el color del texto en hover, mantener el color por defecto
       });
-      
+
       item.addEventListener('mouseleave', () => {
         if (!item.classList.contains('selected')) {
           // Simplemente resetear el background, los colores se manejan por CSS
@@ -165,12 +165,12 @@ document.addEventListener('DOMContentLoaded', async () => {
 
   function filterDocentes(query) {
     if (!query || query.length < 2) return [];
-    
+
     const queryCanon = canon(query);
     return listaDocentes.filter(docente => {
       // Buscar por ID (exacto) o por nombre (contiene)
-      return docente.id.includes(query.trim()) || 
-             docente.canonNombre.includes(queryCanon);
+      return docente.id.includes(query.trim()) ||
+        docente.canonNombre.includes(queryCanon);
     });
   }
 
@@ -181,7 +181,7 @@ document.addEventListener('DOMContentLoaded', async () => {
       hideDropdown();
       return;
     }
-    
+
     const filtered = filterDocentes(query);
     showDropdown(filtered);
   });
@@ -205,7 +205,7 @@ document.addEventListener('DOMContentLoaded', async () => {
   docenteFilterInput?.addEventListener('keydown', (e) => {
     const items = dropdown.querySelectorAll('.dropdown-item');
     let currentSelected = dropdown.querySelector('.selected');
-    
+
     if (e.key === 'ArrowDown') {
       e.preventDefault();
       if (!currentSelected) {
@@ -221,16 +221,16 @@ document.addEventListener('DOMContentLoaded', async () => {
         currentSelected.classList.remove('selected');
         currentSelected.style.backgroundColor = '';
         // Detectar modo oscuro para aplicar color correcto
-        const isDark = window.matchMedia('(prefers-color-scheme: dark)').matches || 
-                      document.body.classList.contains('dark') || 
-                      document.documentElement.getAttribute('data-theme') === 'dark';
-        
+        const isDark = window.matchMedia('(prefers-color-scheme: dark)').matches ||
+          document.body.classList.contains('dark') ||
+          document.documentElement.getAttribute('data-theme') === 'dark';
+
         currentSelected.style.color = isDark ? 'var(--foreground, #e2e8f0)' : 'var(--foreground, #0f172a)';
         const currentIdEl = currentSelected.querySelector('.item-id');
         if (currentIdEl) {
           currentIdEl.style.color = isDark ? 'var(--muted-foreground, #94a3b8)' : 'var(--muted-foreground, #64748b)';
         }
-        
+
         // Seleccionar siguiente
         const nextIndex = Array.from(items).indexOf(currentSelected) + 1;
         const nextItem = nextIndex < items.length ? items[nextIndex] : items[0];
@@ -239,7 +239,7 @@ document.addEventListener('DOMContentLoaded', async () => {
         nextItem.style.color = 'var(--accent-foreground, white)';
         const nextIdEl = nextItem.querySelector('.item-id');
         if (nextIdEl) nextIdEl.style.color = 'rgba(255,255,255,0.9)';
-        
+
         // Scroll automático si es necesario
         nextItem.scrollIntoView({ block: 'nearest', behavior: 'smooth' });
       }
@@ -260,16 +260,16 @@ document.addEventListener('DOMContentLoaded', async () => {
         currentSelected.classList.remove('selected');
         currentSelected.style.backgroundColor = '';
         // Detectar modo oscuro para aplicar color correcto
-        const isDarkUp = window.matchMedia('(prefers-color-scheme: dark)').matches || 
-                        document.body.classList.contains('dark') || 
-                        document.documentElement.getAttribute('data-theme') === 'dark';
-        
+        const isDarkUp = window.matchMedia('(prefers-color-scheme: dark)').matches ||
+          document.body.classList.contains('dark') ||
+          document.documentElement.getAttribute('data-theme') === 'dark';
+
         currentSelected.style.color = isDarkUp ? 'var(--foreground, #e2e8f0)' : 'var(--foreground, #0f172a)';
         const currentIdEl = currentSelected.querySelector('.item-id');
         if (currentIdEl) {
           currentIdEl.style.color = isDarkUp ? 'var(--muted-foreground, #94a3b8)' : 'var(--muted-foreground, #64748b)';
         }
-        
+
         // Seleccionar anterior
         const prevIndex = Array.from(items).indexOf(currentSelected) - 1;
         const prevItem = prevIndex >= 0 ? items[prevIndex] : items[items.length - 1];
@@ -278,7 +278,7 @@ document.addEventListener('DOMContentLoaded', async () => {
         prevItem.style.color = 'var(--accent-foreground, white)';
         const prevIdEl = prevItem.querySelector('.item-id');
         if (prevIdEl) prevIdEl.style.color = 'rgba(255,255,255,0.9)';
-        
+
         // Scroll automático si es necesario
         prevItem.scrollIntoView({ block: 'nearest', behavior: 'smooth' });
       }
@@ -301,6 +301,175 @@ document.addEventListener('DOMContentLoaded', async () => {
       hideDropdown();
     }
   });
+
+  /* ========= Función para crear tabla con ordenamiento ========= */
+  function createSortableTable(data, columns, containerId) {
+    const container = document.getElementById(containerId) || document.createElement('div');
+    if (!container.id) container.id = containerId;
+
+    let currentSort = { column: null, direction: 'asc' };
+    let sortedData = [...data];
+
+    function sortTable(column) {
+      // Si es la misma columna, alternar dirección
+      if (currentSort.column === column) {
+        currentSort.direction = currentSort.direction === 'asc' ? 'desc' : 'asc';
+      } else {
+        // Nueva columna, empezar con descendente
+        currentSort.column = column;
+        currentSort.direction = 'desc';
+      }
+
+      const columnConfig = columns.find(col => col.key === column);
+
+      // Ordenar los datos
+      sortedData.sort((a, b) => {
+        let valueA = a[column];
+        let valueB = b[column];
+
+        // Aplicar transformación personalizada si existe
+        if (columnConfig?.sortTransform) {
+          valueA = columnConfig.sortTransform(valueA);
+          valueB = columnConfig.sortTransform(valueB);
+        }
+
+        // Manejar valores numéricos
+        if (typeof valueA === 'number' && typeof valueB === 'number') {
+          if (currentSort.direction === 'asc') {
+            return valueA > valueB ? 1 : valueA < valueB ? -1 : 0;
+          } else {
+            return valueA < valueB ? 1 : valueA > valueB ? -1 : 0;
+          }
+        }
+
+        // Manejar strings
+        const aStr = String(valueA || '').toLowerCase();
+        const bStr = String(valueB || '').toLowerCase();
+
+        if (currentSort.direction === 'asc') {
+          return aStr > bStr ? 1 : aStr < bStr ? -1 : 0;
+        } else {
+          return aStr < bStr ? 1 : aStr > bStr ? -1 : 0;
+        }
+      });
+
+      // Actualizar la tabla
+      updateTableBody();
+      updateSortIndicators();
+    }
+
+    function updateSortIndicators() {
+      // Limpiar todos los indicadores
+      const headers = tbl.querySelectorAll('th[data-sort]');
+      headers.forEach(th => {
+        th.classList.remove('sort-asc', 'sort-desc');
+      });
+
+      // Agregar indicador a la columna actual
+      const currentHeader = tbl.querySelector(`th[data-sort="${currentSort.column}"]`);
+      if (currentHeader) {
+        currentHeader.classList.add(currentSort.direction === 'asc' ? 'sort-asc' : 'sort-desc');
+      }
+    }
+
+    function updateTableBody() {
+      const tbody = tbl.querySelector('tbody');
+      tbody.innerHTML = '';
+
+      sortedData.forEach((row, index) => {
+        const tr = document.createElement('tr');
+
+        columns.forEach(col => {
+          const td = document.createElement('td');
+          td.style.cssText = col.cellStyle || '';
+
+          if (col.render) {
+            td.innerHTML = col.render(row, index);
+          } else {
+            td.textContent = row[col.key] || '';
+          }
+
+          tr.appendChild(td);
+        });
+
+        tbody.appendChild(tr);
+      });
+    }
+
+    const tbl = document.createElement('table');
+    tbl.className = 'striped';
+
+    // Crear header
+    const thead = document.createElement('thead');
+    const headerRow = document.createElement('tr');
+
+    columns.forEach(col => {
+      const th = document.createElement('th');
+      th.style.cssText = col.style || '';
+
+      if (col.sortable !== false) {
+        th.style.cursor = 'pointer';
+        th.style.userSelect = 'none';
+        th.setAttribute('data-sort', col.key);
+        th.addEventListener('click', () => {
+          const column = th.getAttribute('data-sort');
+          sortTable(column);
+        });
+      }
+
+      // Crear contenido del header igual que el original
+      th.innerHTML = `
+      ${col.label} 
+      ${col.sortable !== false ? '<span class="sort-indicator"></span>' : ''}
+    `;
+
+      headerRow.appendChild(th);
+    });
+
+    thead.appendChild(headerRow);
+    tbl.appendChild(thead);
+
+    // Crear body
+    const tbody = document.createElement('tbody');
+    tbl.appendChild(tbody);
+
+    // Agregar estilos para los indicadores de ordenamiento (solo si no existen)
+    if (!document.getElementById('sort-styles')) {
+      const sortStyles = document.createElement('style');
+      sortStyles.id = 'sort-styles';
+      sortStyles.textContent = `
+      .sort-indicator::after {
+        content: ' ▲';
+        color: #ccc;
+        font-size: 12px;
+      }
+      
+      th.sort-asc .sort-indicator::after {
+        content: ' ▲';
+        color: var(--primary, #007bff);
+      }
+      
+      th.sort-desc .sort-indicator::after {
+        content: ' ▼';
+        color: var(--primary, #007bff);
+      }
+      
+      th[data-sort]:hover {
+        background-color: rgba(0, 0, 0, 0.05);
+      }
+    `;
+      document.head.appendChild(sortStyles);
+    }
+
+    // Llenar la tabla inicial
+    updateTableBody();
+    updateSortIndicators();
+
+    container.innerHTML = '';
+    container.appendChild(tbl);
+
+    return container;
+  }
 
   /* ========= Sección de "Top" y gráficos generales ========= */
   let hostTop = document.getElementById('top10ReprobadosContainer');
@@ -329,9 +498,9 @@ document.addEventListener('DOMContentLoaded', async () => {
   const barCanvas = chartsWrap.querySelector('#chartAprobadosBar');
 
   /* ====== Construcción del TOP apilado: Aprobadas vs Reprobadas por DOCENTE (todos sus cursos) ====== */
-  const aprobadasPorDoc   = {};
-  const reprobadasPorDoc  = {};
-  const totalPorDoc       = {};
+  const aprobadasPorDoc = {};
+  const reprobadasPorDoc = {};
+  const totalPorDoc = {};
 
   dataFiltrada.forEach(r => {
     const docente = getNombreDocente(r.DOCENTE);
@@ -349,8 +518,8 @@ document.addEventListener('DOMContentLoaded', async () => {
   // Ordena por % de REPROBADOS (mayor a menor) y toma Top 15
   const topStacked = Object.keys(totalPorDoc)
     .map(docente => {
-      const ap  = aprobadasPorDoc[docente]  ?? 0;
-      const rp  = reprobadasPorDoc[docente] ?? 0;
+      const ap = aprobadasPorDoc[docente] ?? 0;
+      const rp = reprobadasPorDoc[docente] ?? 0;
       const tot = ap + rp;
       const rpct = tot > 0 ? (rp / tot) * 100 : 0; // % reprobados
       const apct = 100 - rpct;                     // % aprobados
@@ -361,10 +530,10 @@ document.addEventListener('DOMContentLoaded', async () => {
     .slice(0, 15);
 
   const labelsStack = topStacked.map(x => x.docente);
-  const dataAp      = topStacked.map(x => x.ap);       // absolutos (para tooltip/tabla)
-  const dataRp      = topStacked.map(x => x.rp);
-  const dataApPct   = topStacked.map(x => x.apct);     // %
-  const dataRpPct   = topStacked.map(x => x.rpct);
+  const dataAp = topStacked.map(x => x.ap);       // absolutos (para tooltip/tabla)
+  const dataRp = topStacked.map(x => x.rp);
+  const dataApPct = topStacked.map(x => x.apct);     // %
+  const dataRpPct = topStacked.map(x => x.rpct);
 
 
   // === Gráfico GENERAL (normalizado a %) y ordenado por % aprobación desc ===
@@ -418,8 +587,8 @@ document.addEventListener('DOMContentLoaded', async () => {
             },
             afterBody: (items) => {
               const idx = items?.[0]?.dataIndex ?? 0;
-              const ap  = dataAp[idx] ?? 0;
-              const rp  = dataRp[idx] ?? 0;
+              const ap = dataAp[idx] ?? 0;
+              const rp = dataRp[idx] ?? 0;
               const tot = ap + rp;
               const pctAp = tot > 0 ? ((ap / tot) * 100).toFixed(2) : '0.00';
               return [
@@ -435,41 +604,79 @@ document.addEventListener('DOMContentLoaded', async () => {
     }
   });
 
-  /* ===== Tabla informativa bajo el gráfico (números absolutos) ===== */
+  /* ===== Tabla informativa bajo el gráfico (números absolutos) con ordenamiento ===== */
   const tableWrap = document.createElement('div');
   tableWrap.style.marginTop = '12px';
   tableWrap.style.overflowX = 'auto';
 
-  const table = document.createElement('table');
-  table.className = 'striped';
-  table.innerHTML = `
-    <thead>
-      <tr>
-        <th style="width:56px;">#</th>
-        <th>Docente</th>
-        <th style="text-align:right;width:140px;">Aprobadas</th>
-        <th style="text-align:right;width:140px;">Reprobadas</th>
-        <th style="text-align:right;width:160px;">Total</th>
-        <th style="text-align:right;width:140px;">% Aprobación</th>
-      </tr>
-    </thead>
-    <tbody></tbody>
-  `;
-  const tbody = table.querySelector('tbody');
-  topStacked.forEach((x, i) => {
-    const pct = x.tot > 0 ? ((x.ap / x.tot) * 100).toFixed(2) : '0.00';
-    const tr = document.createElement('tr');
-    tr.innerHTML = `
-      <td>${i + 1}</td>
-      <td>${x.docente}</td>
-      <td style="text-align:right;">${x.ap}</td>
-      <td style="text-align:right;">${x.rp}</td>
-      <td style="text-align:right;">${x.tot}</td>
-      <td style="text-align:right;">${pct}%</td>
-    `;
-    tbody.appendChild(tr);
-  });
-  tableWrap.appendChild(table);
+  // Preparar datos para la tabla ordenable
+  const tableData = topStacked.map((x, i) => ({
+    posicion: i + 1,
+    docente: x.docente,
+    aprobadas: x.ap,
+    reprobadas: x.rp,
+    total: x.tot,
+    pctAprobacion: x.tot > 0 ? ((x.ap / x.tot) * 100).toFixed(2) : '0.00',
+    pctReprobacion: x.tot > 0 ? ((x.rp / x.tot) * 100).toFixed(2) : '0.00'
+  }));
+
+  const tableColumns = [
+    {
+      key: 'posicion',
+      label: '#',
+      style: 'width:56px;',
+      sortable: false,
+      render: (row) => row.posicion
+    },
+    {
+      key: 'docente',
+      label: 'Docente',
+      render: (row) => row.docente
+    },
+    {
+      key: 'aprobadas',
+      label: 'Aprobadas',
+      style: 'text-align:right;width:140px;',
+      cellStyle: 'text-align:right;',
+      sortTransform: (val) => parseInt(val),
+      render: (row) => row.aprobadas
+    },
+    {
+      key: 'reprobadas',
+      label: 'Reprobadas',
+      style: 'text-align:right;width:140px;',
+      cellStyle: 'text-align:right;',
+      sortTransform: (val) => parseInt(val),
+      render: (row) => row.reprobadas
+    },
+    {
+      key: 'total',
+      label: 'Total',
+      style: 'text-align:right;width:160px;',
+      cellStyle: 'text-align:right;',
+      sortTransform: (val) => parseInt(val),
+      render: (row) => row.total
+    },
+    {
+      key: 'pctAprobacion',
+      label: '% Aprobación',
+      style: 'text-align:right;width:140px;',
+      cellStyle: 'text-align:right;',
+      sortTransform: (val) => parseFloat(val),
+      render: (row) => row.pctAprobacion + '%'
+    },
+    {
+      key: 'pctReprobacion',
+      label: '% Reprobados',
+      style: 'text-align:right;width:140px;',
+      cellStyle: 'text-align:right;',
+      sortTransform: (val) => parseFloat(val),
+      render: (row) => row.pctReprobacion + '%'
+    }
+  ];
+
+  const sortableTable = createSortableTable(tableData, tableColumns, 'generalTableContainer');
+  tableWrap.appendChild(sortableTable);
   barCanvas.parentElement.appendChild(tableWrap);
 
   /* ========= TOP 10 REPROBADOS (vista general) ========= */
@@ -540,7 +747,7 @@ document.addEventListener('DOMContentLoaded', async () => {
         <td>${idx + 1}</td>
         <td>${it.docente}</td>
         <td>${it.materia}</td>
-        <td style="text-align:right;">${it.pct.toFixed(2)}</td>`;
+        <td style="text-align:right;">${it.pct.toFixed(2)}%</td>`;
       tbG.appendChild(tr);
     });
     hostTop.appendChild(tableGlobal);
@@ -721,14 +928,14 @@ document.addEventListener('DOMContentLoaded', async () => {
     const rows = dataFiltrada.filter(r => matchesDocente(r, query));
     // Ocultar vista general
     chartsWrap.style.display = 'none';
-    hostTop.style.display   = 'none';
+    hostTop.style.display = 'none';
     // Mostrar historial
     histSection.style.display = 'block';
 
     const histTitle = histSection.querySelector('#histTitle');
-    const histKpis  = histSection.querySelector('#histKpis');
+    const histKpis = histSection.querySelector('#histKpis');
     const tableWrap = histSection.querySelector('#histTableWrap');
-    const canvas    = histSection.querySelector('#histChartPeriodo');
+    const canvas = histSection.querySelector('#histChartPeriodo');
 
     // Limpieza
     histKpis.innerHTML = '';
@@ -755,7 +962,7 @@ document.addEventListener('DOMContentLoaded', async () => {
       else if (e === 'REPROBADA') reprobadas++;
     });
     const total = aprobadas + reprobadas;
-    const pct   = total > 0 ? ((aprobadas / total) * 100).toFixed(2) : '0.00';
+    const pct = total > 0 ? ((aprobadas / total) * 100).toFixed(2) : '0.00';
 
     // KPIs
     const kpiTpl = (label, value) => `
@@ -779,35 +986,35 @@ document.addEventListener('DOMContentLoaded', async () => {
     });
 
     const periodosOrdenados = Object.keys(per)
-  .map(p => {
-    const ap = per[p].ap;
-    const rp = per[p].rp;
-    const tot = ap + rp;
-    const pctAp = tot ? (ap / tot) * 100 : 0;
-    return { periodo: p, ap, rp, tot, pctAp };
-  })
-  .sort((a, b) => {
-    // Ordenar por período cronológicamente (más reciente primero)
-    // Asumiendo formato "YYYY - YYYY CI" o similar
-    const extractYear = (periodo) => {
-      const match = periodo.match(/(\d{4})/);
-      return match ? parseInt(match[1]) : 0;
-    };
-    
-    const yearA = extractYear(a.periodo);
-    const yearB = extractYear(b.periodo);
-    
-    // Si los años son diferentes, ordenar por año descendente
-    if (yearA !== yearB) {
-      return yearB - yearA;
-    }
-    
-    // Si los años son iguales, ordenar alfabéticamente descendente
-    // Esto manejará casos como "2024 - 2025 CI" vs "2024 - 2025 CII"
-    return b.periodo.localeCompare(a.periodo);
-  });
+      .map(p => {
+        const ap = per[p].ap;
+        const rp = per[p].rp;
+        const tot = ap + rp;
+        const pctAp = tot ? (ap / tot) * 100 : 0;
+        return { periodo: p, ap, rp, tot, pctAp };
+      })
+      .sort((a, b) => {
+        // Ordenar por período cronológicamente (más reciente primero)
+        // Asumiendo formato "YYYY - YYYY CI" o similar
+        const extractYear = (periodo) => {
+          const match = periodo.match(/(\d{4})/);
+          return match ? parseInt(match[1]) : 0;
+        };
 
-    const labelsP   = periodosOrdenados.map(x => x.periodo);
+        const yearA = extractYear(a.periodo);
+        const yearB = extractYear(b.periodo);
+
+        // Si los años son diferentes, ordenar por año descendente
+        if (yearA !== yearB) {
+          return yearB - yearA;
+        }
+
+        // Si los años son iguales, ordenar alfabéticamente descendente
+        // Esto manejará casos como "2024 - 2025 CI" vs "2024 - 2025 CII"
+        return b.periodo.localeCompare(a.periodo);
+      });
+
+    const labelsP = periodosOrdenados.map(x => x.periodo);
     const serieApAbs = periodosOrdenados.map(x => x.ap);
     const serieRpAbs = periodosOrdenados.map(x => x.rp);
     const serieApPct = periodosOrdenados.map(x => x.pctAp);
@@ -889,39 +1096,180 @@ document.addEventListener('DOMContentLoaded', async () => {
       if (e === 'APROBADA') materias[m].ap++;
       else if (e === 'REPROBADA') materias[m].rp++;
     });
-    const listaMaterias = Object.entries(materias).map(([materia, v]) => ({
-      materia, ap: v.ap, rp: v.rp, tot: v.ap + v.rp
+
+    let listaMaterias = Object.entries(materias).map(([materia, v]) => ({
+      materia,
+      ap: v.ap,
+      rp: v.rp,
+      tot: v.ap + v.rp,
+      pctAprobacion: v.ap + v.rp > 0 ? ((v.ap / (v.ap + v.rp)) * 100) : 0,
+      pctReprobacion: v.ap + v.rp > 0 ? ((v.rp / (v.ap + v.rp)) * 100) : 0
     })).sort((a, b) => b.tot - a.tot);
+
+    // Estado del ordenamiento
+    let currentSort = { column: 'tot', direction: 'desc' };
+
+    function sortTable(column) {
+      // Si es la misma columna, alternar dirección
+      if (currentSort.column === column) {
+        currentSort.direction = currentSort.direction === 'asc' ? 'desc' : 'asc';
+      } else {
+        // Nueva columna, empezar con descendente
+        currentSort.column = column;
+        currentSort.direction = 'desc';
+      }
+
+      // Ordenar los datos
+      listaMaterias.sort((a, b) => {
+        let valueA, valueB;
+
+        switch (column) {
+          case 'materia':
+            valueA = a.materia.toLowerCase();
+            valueB = b.materia.toLowerCase();
+            break;
+          case 'ap':
+            valueA = a.ap;
+            valueB = b.ap;
+            break;
+          case 'rp':
+            valueA = a.rp;
+            valueB = b.rp;
+            break;
+          case 'tot':
+            valueA = a.tot;
+            valueB = b.tot;
+            break;
+          case 'pctAprobacion':
+            valueA = a.pctAprobacion;
+            valueB = b.pctAprobacion;
+            break;
+          case 'pctReprobacion':
+            valueA = a.pctReprobacion;
+            valueB = b.pctReprobacion;
+            break;
+          default:
+            return 0;
+        }
+
+        if (currentSort.direction === 'asc') {
+          return valueA > valueB ? 1 : valueA < valueB ? -1 : 0;
+        } else {
+          return valueA < valueB ? 1 : valueA > valueB ? -1 : 0;
+        }
+      });
+
+      // Actualizar la tabla
+      updateTableBody();
+      updateSortIndicators();
+    }
+
+    function updateSortIndicators() {
+      // Limpiar todos los indicadores
+      const headers = tbl.querySelectorAll('th[data-sort]');
+      headers.forEach(th => {
+        th.classList.remove('sort-asc', 'sort-desc');
+      });
+
+      // Agregar indicador a la columna actual
+      const currentHeader = tbl.querySelector(`th[data-sort="${currentSort.column}"]`);
+      if (currentHeader) {
+        currentHeader.classList.add(currentSort.direction === 'asc' ? 'sort-asc' : 'sort-desc');
+      }
+    }
+
+    function updateTableBody() {
+      const tbody = tbl.querySelector('tbody');
+      tbody.innerHTML = '';
+
+      listaMaterias.forEach((x, i) => {
+        const tr = document.createElement('tr');
+        tr.innerHTML = `
+      <td>${i + 1}</td>
+      <td>${x.materia}</td>
+      <td style="text-align:right;">${x.ap}</td>
+      <td style="text-align:right;">${x.rp}</td>
+      <td style="text-align:right;">${x.tot}</td>
+      <td style="text-align:right;">${x.pctAprobacion.toFixed(2)}%</td>
+      <td style="text-align:right;">${x.pctReprobacion.toFixed(2)}%</td>
+    `;
+        tbody.appendChild(tr);
+      });
+    }
 
     const tbl = document.createElement('table');
     tbl.className = 'striped';
     tbl.innerHTML = `
-      <thead>
-        <tr>
-          <th style="width:56px;">#</th>
-          <th>Materia</th>
-          <th style="text-align:right;width:140px;">Aprobadas</th>
-          <th style="text-align:right;width:140px;">Reprobadas</th>
-          <th style="text-align:right;width:160px;">Total</th>
-          <th style="text-align:right;width:140px;">% Aprobación</th>
-        </tr>
-      </thead>
-      <tbody></tbody>
-    `;
-    const tbodyM = tbl.querySelector('tbody');
-    listaMaterias.forEach((x, i) => {
-      const pctM = x.tot > 0 ? ((x.ap / x.tot) * 100).toFixed(2) : '0.00';
-      const tr = document.createElement('tr');
-      tr.innerHTML = `
-        <td>${i + 1}</td>
-        <td>${x.materia}</td>
-        <td style="text-align:right;">${x.ap}</td>
-        <td style="text-align:right;">${x.rp}</td>
-        <td style="text-align:right;">${x.tot}</td>
-        <td style="text-align:right;">${pctM}%</td>
-      `;
-      tbodyM.appendChild(tr);
+  <thead>
+    <tr>
+      <th style="width:56px;">#</th>
+      <th data-sort="materia" style="cursor:pointer;user-select:none;">
+        Materia 
+        <span class="sort-indicator"></span>
+      </th>
+      <th data-sort="ap" style="text-align:right;width:120px;cursor:pointer;user-select:none;">
+        Aprobadas 
+        <span class="sort-indicator"></span>
+      </th>
+      <th data-sort="rp" style="text-align:right;width:120px;cursor:pointer;user-select:none;">
+        Reprobadas 
+        <span class="sort-indicator"></span>
+      </th>
+      <th data-sort="tot" style="text-align:right;width:120px;cursor:pointer;user-select:none;">
+        Total 
+        <span class="sort-indicator"></span>
+      </th>
+      <th data-sort="pctAprobacion" style="text-align:right;width:130px;cursor:pointer;user-select:none;">
+        % Aprobación 
+        <span class="sort-indicator"></span>
+      </th>
+      <th data-sort="pctReprobacion" style="text-align:right;width:145px;cursor:pointer;user-select:none;">
+        % Reprobados 
+        <span class="sort-indicator"></span>
+      </th>
+    </tr>
+  </thead>
+  <tbody></tbody>
+`;
+
+    // Agregar estilos para los indicadores de ordenamiento
+    const sortStyles = document.createElement('style');
+    sortStyles.textContent = `
+  .sort-indicator::after {
+    content: ' ▲';
+    color: #ccc;
+    font-size: 12px;
+  }
+  
+  th.sort-asc .sort-indicator::after {
+    content: ' ▲';
+    color: var(--primary, #007bff);
+  }
+  
+  th.sort-desc .sort-indicator::after {
+    content: ' ▼';
+    color: var(--primary, #007bff);
+  }
+  
+  th[data-sort]:hover {
+    background-color: rgba(0, 0, 0, 0.05);
+  }
+`;
+    document.head.appendChild(sortStyles);
+
+    // Agregar event listeners para el ordenamiento
+    const headers = tbl.querySelectorAll('th[data-sort]');
+    headers.forEach(th => {
+      th.addEventListener('click', () => {
+        const column = th.getAttribute('data-sort');
+        sortTable(column);
+      });
     });
+
+    // Llenar la tabla inicial
+    updateTableBody();
+    updateSortIndicators();
+
     tableWrap.innerHTML = '';
     tableWrap.appendChild(tbl);
   }
@@ -930,8 +1278,8 @@ document.addEventListener('DOMContentLoaded', async () => {
   histSection.querySelector('#btnClearFilter').addEventListener('click', () => {
     docenteFilterInput.value = '';
     histSection.style.display = 'none';
-    chartsWrap.style.display  = '';
-    hostTop.style.display     = '';
+    chartsWrap.style.display = '';
+    hostTop.style.display = '';
     hideDropdown();
   });
 
@@ -941,8 +1289,8 @@ document.addEventListener('DOMContentLoaded', async () => {
     if (!q) {
       // Si el filtro está vacío, vuelve a la vista general
       histSection.style.display = 'none';
-      chartsWrap.style.display  = '';
-      hostTop.style.display     = '';
+      chartsWrap.style.display = '';
+      hostTop.style.display = '';
       return;
     }
     hideDropdown();

@@ -1,12 +1,10 @@
-// Modules/distribucion-docente.js
 import { loadData } from '../indexeddb-storage.js';
 
-const DAYS = ['LUNES','MARTES','MIERCOLES','JUEVES','VIERNES','SABADO']; // Domingo no usado
+const DAYS = ['LUNES','MARTES','MIERCOLES','JUEVES','VIERNES','SABADO'];
 const START_TIME = '07:00';
 const END_TIME   = '22:00';
-const SLOT_MIN   = 30; // minutos por intervalo
+const SLOT_MIN   = 30;
 
-// DOM
 const docenteInput = document.getElementById('docenteInput');
 const docenteDropdown = document.getElementById('docenteDropdown');
 const clearBtn = document.getElementById('clearBtn');
@@ -34,12 +32,10 @@ const hideOverlay = () => { if (overlay) overlay.style.display = 'none'; };
 
 const norm = v => (v ?? '').toString().trim();
 
-// === Claves de IndexedDB (como las guarda index.js) ==========================
 const normalizeFileName = (fileName) => fileName.replace(/\W+/g, "_");
 const KEY_CLASES = 'academicTrackingData_' + normalizeFileName('REPORTE_NOMINA_CARRERA_DOCENTES_MATERIA_+_HORARIOS.xlsx');
 const KEY_ACTIV  = 'academicTrackingData_' + normalizeFileName('REPORTE_DOCENTES_HORARIOS_DISTRIBITIVO.xlsx');
 
-// Búsqueda flexible por si cambia un poco el nombre
 async function loadFromGuess(regex) {
   const processed = await loadData('processedFiles');
   if (Array.isArray(processed)) {
@@ -53,7 +49,6 @@ async function loadFromGuess(regex) {
   return [];
 }
 
-// Data sources
 async function loadClasesData(){
   let data = await loadData(KEY_CLASES);
   if (Array.isArray(data) && data.length) return data;
@@ -65,7 +60,6 @@ async function loadActividadesData(){
   return await loadFromGuess(/DOCENTES.*HORARIOS.*DISTRIB/i);
 }
 
-// Utilidades de tiempo
 function toMinutes(hhmm){
   const [h,m] = hhmm.split(':').map(Number);
   return (h*60 + (m||0));
@@ -79,7 +73,6 @@ function minutesToLabel(min){
   return `${String(h).padStart(2,'0')}:${String(m).padStart(2,'0')}`;
 }
 function parseRanges(cell){
-  // "08:00 - 10:00" ; "09:00-10:30" ; múltiples separados por ',' o ';'
   const s = norm(cell);
   if (!s) return [];
   return s.split(/[;,]/).map(x => x.trim()).filter(Boolean).map(part => {
@@ -92,14 +85,12 @@ function parseRanges(cell){
   }).filter(Boolean);
 }
 
-// Paleta del heatmap (verde->rojo)
 function colorFor(value, max){
   const t = (max<=0)?0 : Math.max(0, Math.min(1, value / max));
-  const hue = 120 * (1 - t); // 120 (verde) -> 0 (rojo)
+  const hue = 120 * (1 - t);
   return `hsl(${hue} 60% 45%)`;
 }
 
-// Eje de tiempo
 function buildTimeAxis(){
   const out = [];
   for (let m = toMinutes(START_TIME); m <= toMinutes(END_TIME); m += SLOT_MIN){
@@ -111,7 +102,7 @@ function buildTimeAxis(){
 // ==================== HEATMAP (CLASES) ======================================
 function buildHeatCounts(data) {
   const times = buildTimeAxis();
-  const counts = {}; // counts[slotLabel][day] = n
+  const counts = {};
   times.forEach(t => { counts[t] = {}; DAYS.forEach(d => counts[t][d] = 0); });
 
   for (const row of data) {
@@ -163,7 +154,7 @@ function filterDocentes(query) {
   const q = query.toLowerCase();
   return allDocentes.filter(doc => 
     doc.toLowerCase().includes(q)
-  ).slice(0, 10); // Máximo 10 resultados
+  ).slice(0, 10);
 }
 
 function highlightMatch(text, query) {
@@ -188,14 +179,12 @@ function showDropdown(matches) {
     item.setAttribute('data-docente', docente);
     item.setAttribute('data-index', index);
     
-    // Event listener para click
     item.addEventListener('click', (e) => {
       e.preventDefault();
       e.stopPropagation();
       selectTeacher(docente);
     });
     
-    // Event listener para hover
     item.addEventListener('mouseenter', () => {
       document.querySelectorAll('.dropdown-item.highlighted').forEach(el => {
         el.classList.remove('highlighted');
@@ -220,7 +209,6 @@ function selectTeacher(teacher) {
   docenteInput.value = teacher;
   hideDropdown();
   loadTeacherSchedule(teacher);
-  // Remover cualquier estilo de error
   docenteInput.style.borderColor = '';
 }
 
@@ -241,7 +229,6 @@ function validateAndLoadTeacher() {
     return;
   }
 
-  // Verificar si es un nombre exacto
   const exactMatch = allDocentes.find(doc => 
     doc.toLowerCase() === inputValue.toLowerCase()
   );
@@ -249,7 +236,6 @@ function validateAndLoadTeacher() {
   if (exactMatch) {
     selectTeacher(exactMatch);
   } else {
-    // Si no es exacto, mostrar mensaje o limpiar
     docenteInput.style.borderColor = '#e74c3c';
     setTimeout(() => {
       docenteInput.style.borderColor = '';
@@ -275,17 +261,14 @@ function showHeatMap() {
 }
 
 function loadTeacherSchedule(teacher) {
-  // Ocultar heatmap
   heatWrap.style.display = 'none';
   heatLegend.style.display = 'none';
 
-  // Cargar horario del docente (reutilizando la función existente)
   const M = buildTeacherMatrixUnified(dataClases || [], dataActiv || [], teacher);
   renderTeacherTableUnified(M, teacher);
 }
 
 // ==================== HORARIO UNIFICADO POR DOCENTE =========================
-// Devuelve matrix[slot][day] = { classes:[...], acts:[...] } y totales de horas
 function buildTeacherMatrixUnified(dataClases, dataActiv, teacher){
   const times = buildTimeAxis();
   const matrix = {};
@@ -336,7 +319,7 @@ function buildTeacherMatrixUnified(dataClases, dataActiv, teacher){
       if (matrix[t][day].acts.length    > 0) actSlots   += 1;
     }
   }
-  const slotHours = SLOT_MIN / 60;         // 0.5 si SLOT_MIN=30
+  const slotHours = SLOT_MIN / 60;
   const hoursClass = classSlots * slotHours;
   const hoursAct   = actSlots   * slotHours;
 
@@ -344,73 +327,204 @@ function buildTeacherMatrixUnified(dataClases, dataActiv, teacher){
 }
 
 function fmtHours(h){
-  // Formato bonito: enteros como "9H"; medios como "9.5H"
-  const rounded = Math.round(h * 2) / 2; // a pasos de 0.5
+  const rounded = Math.round(h * 2) / 2;
   return (Number.isInteger(rounded)) ? `${rounded}H` : `${rounded.toFixed(1)}H`;
 }
 
+// ==================== NUEVA FUNCIÓN PARA CONSOLIDAR BLOQUES ================
+function consolidateBlocks(matrix, times) {
+  const consolidated = {};
+  
+  DAYS.forEach(day => {
+    consolidated[day] = [];
+    let i = 0;
+    
+    while (i < times.length - 1) {
+      const currentTime = times[i];
+      const currentSlot = matrix[currentTime][day];
+      
+      if (currentSlot.classes.length === 0 && currentSlot.acts.length === 0) {
+        // Slot vacío
+        consolidated[day].push({
+          startTime: currentTime,
+          endTime: times[i + 1],
+          isEmpty: true,
+          rowspan: 1
+        });
+        i++;
+        continue;
+      }
+      
+      // Buscar bloques consolidables para clases
+      if (currentSlot.classes.length > 0) {
+        const classInfo = currentSlot.classes[0]; // Tomamos la primera clase como referencia
+        let endIndex = i + 1;
+        
+        // Buscar slots consecutivos con la misma clase
+        while (endIndex < times.length - 1) {
+          const nextSlot = matrix[times[endIndex]][day];
+          if (nextSlot.classes.length === 0 || 
+              !isSameClass(classInfo, nextSlot.classes[0])) {
+            break;
+          }
+          endIndex++;
+        }
+        
+        consolidated[day].push({
+          type: 'class',
+          startTime: currentTime,
+          endTime: times[endIndex],
+          rowspan: endIndex - i,
+          data: classInfo
+        });
+        i = endIndex;
+        continue;
+      }
+      
+      // Buscar bloques consolidables para actividades
+      if (currentSlot.acts.length > 0) {
+        const actInfo = currentSlot.acts[0]; // Tomamos la primera actividad como referencia
+        let endIndex = i + 1;
+        
+        // Buscar slots consecutivos con la misma actividad
+        while (endIndex < times.length - 1) {
+          const nextSlot = matrix[times[endIndex]][day];
+          if (nextSlot.acts.length === 0 || 
+              !isSameActivity(actInfo, nextSlot.acts[0])) {
+            break;
+          }
+          endIndex++;
+        }
+        
+        consolidated[day].push({
+          type: 'activity',
+          startTime: currentTime,
+          endTime: times[endIndex],
+          rowspan: endIndex - i,
+          data: actInfo
+        });
+        i = endIndex;
+        continue;
+      }
+    }
+  });
+  
+  return consolidated;
+}
+
+function isSameClass(class1, class2) {
+  return class1.subj === class2.subj && 
+         class1.aula === class2.aula && 
+         class1.grupo === class2.grupo;
+}
+
+function isSameActivity(act1, act2) {
+  return act1.gestion === act2.gestion && 
+         act1.actividad === act2.actividad;
+}
+
 function renderTeacherTableUnified({ matrix, times, hoursClass, hoursAct }, teacher){
-  // Cabecera y chips
   teacherHeader.style.display = '';
   teacherSub.style.display    = '';
   teacherTitle.textContent    = teacher;
   chipClassHours.textContent  = fmtHours(hoursClass);
   chipActHours.textContent    = fmtHours(hoursAct);
 
-  // Tabla
   schedWrap.style.display = '';
   schedBody.innerHTML = '';
 
-  for (let i=0; i<times.length-1; i++){
+  // Consolidar bloques
+  const consolidatedBlocks = consolidateBlocks(matrix, times);
+  
+  // Crear matriz para tracking de celdas ya renderizadas
+  const renderedMatrix = {};
+  times.slice(0, -1).forEach(t => {
+    renderedMatrix[t] = {};
+    DAYS.forEach(d => renderedMatrix[t][d] = false);
+  });
+
+  // Pre-marcar todas las celdas que serán ocupadas por bloques consolidados
+  DAYS.forEach(day => {
+    consolidatedBlocks[day].forEach(block => {
+      if (!block.isEmpty && block.rowspan > 1) {
+        const startIndex = times.indexOf(block.startTime);
+        for (let j = startIndex; j < startIndex + block.rowspan && j < times.length - 1; j++) {
+          renderedMatrix[times[j]][day] = true;
+        }
+      }
+    });
+  });
+
+  for (let i = 0; i < times.length - 1; i++) {
     const t = times[i];
     const tr = document.createElement('tr');
-    const th = document.createElement('th'); th.textContent = t; tr.appendChild(th);
+    const th = document.createElement('th'); 
+    th.textContent = t; 
+    tr.appendChild(th);
 
-    for (const day of DAYS){
-      const info = matrix[t][day];
-      const td = document.createElement('td');
-      const div = document.createElement('div');
-      const hasAny = (info.classes.length + info.acts.length) > 0;
-
-      div.className = 'slot' + (hasAny ? ' busy' : '');
-
-      if (hasAny){
-        // CLASES
-        for (const c of info.classes){
-          const block = document.createElement('div');
-          block.className = 'row';
-          block.innerHTML = `
-            <span class="tag class">CLASE</span>
-            <div class="subj">${c.subj || 'Clase'}</div>
-            <div class="meta">
-              ${c.grupo ? `Grupo: ${c.grupo}` : ''}${c.grupo && c.aula ? ' · ' : ''}${c.aula ? `Aula: ${c.aula}` : ''}
-            </div>
-          `;
-          div.appendChild(block);
+    for (const day of DAYS) {
+      // Buscar el bloque que INICIA en este tiempo y día
+      const block = consolidatedBlocks[day].find(b => b.startTime === t);
+      
+      if (block) {
+        // Solo renderizar si es el bloque que inicia en esta fila
+        const td = document.createElement('td');
+        
+        if (block.isEmpty) {
+          const div = document.createElement('div');
+          div.className = 'slot';
+          div.textContent = '';
+          td.appendChild(div);
+        } else {
+          td.rowSpan = block.rowspan;
+          const div = document.createElement('div');
+          div.className = 'slot busy consolidated-block';
+          
+          if (block.type === 'class') {
+            const c = block.data;
+            const blockDiv = document.createElement('div');
+            blockDiv.className = 'row';
+            blockDiv.innerHTML = `
+              <span class="tag class">CLASE</span>
+              <div class="subj">${c.subj || 'Clase'}</div>
+              <div class="meta">
+                ${c.grupo ? `Grupo: ${c.grupo}` : ''}${c.grupo && c.aula ? ' · ' : ''}${c.aula ? `Aula: ${c.aula}` : ''}
+              </div>
+              <div class="time-range">${block.startTime} - ${block.endTime}</div>
+            `;
+            div.appendChild(blockDiv);
+          } else if (block.type === 'activity') {
+            const a = block.data;
+            const blockDiv = document.createElement('div');
+            blockDiv.className = 'row';
+            blockDiv.innerHTML = `
+              <span class="tag act">GESTIONES_VARIAS</span>
+              <div class="subj">${a.gestion}</div>
+              ${a.actividad ? `<div class="meta">Actividad: ${a.actividad}</div>` : ''}
+              <div class="time-range">${block.startTime} - ${block.endTime}</div>
+            `;
+            div.appendChild(blockDiv);
+          }
+          
+          td.appendChild(div);
         }
-        // ACTIVIDADES
-        for (const a of info.acts){
-          const block = document.createElement('div');
-          block.className = 'row';
-          block.innerHTML = `
-            <span class="tag act">GESTIONES_VARIAS</span>
-            <div class="subj">${a.gestion}</div>
-            ${a.actividad ? `<div class="meta">Actividad: ${a.actividad}</div>` : ''}
-          `;
-          div.appendChild(block);
-        }
-      } else {
-        div.textContent = ''; // libre
+        
+        tr.appendChild(td);
+      } else if (!renderedMatrix[t][day]) {
+        // Esta celda no está ocupada por ningún bloque consolidado, renderizar celda vacía
+        const td = document.createElement('td');
+        const div = document.createElement('div');
+        div.className = 'slot';
+        div.textContent = '';
+        td.appendChild(div);
+        tr.appendChild(td);
       }
-
-      td.appendChild(div);
-      tr.appendChild(td);
+      // Si renderedMatrix[t][day] es true, no renderizamos nada (la celda ya está ocupada por un rowspan)
     }
     schedBody.appendChild(tr);
   }
 }
 
-// Variables globales para los datos
 let dataClases = [];
 let dataActiv = [];
 
@@ -418,12 +532,10 @@ let dataActiv = [];
 (async function init(){
   goMenuBtn?.addEventListener('click', () => window.location.href = '../index.html');
 
-  // Cargar datasets
   showOverlay('Cargando datos...');
   [dataClases, dataActiv] = await Promise.all([ loadClasesData(), loadActividadesData() ]);
   hideOverlay();
 
-  // Heatmap global (si hay datos de clases)
   if (Array.isArray(dataClases) && dataClases.length){
     const { counts, max, times } = buildHeatCounts(dataClases);
     renderHeatTable({ counts, max, times });
@@ -432,19 +544,17 @@ let dataActiv = [];
     heatLegend.style.display = 'none';
   }
 
-  // Recopilar todos los docentes
   allDocentes = Array.from(new Set([
     ...((dataClases||[]).map(r => norm(r.DOCENTE)).filter(Boolean)),
     ...((dataActiv ||[]).map(r => norm(r.DOCENTE)).filter(Boolean)),
   ])).sort((a,b)=>a.localeCompare(b));
 
-  // Event listeners mejorados para el autocompletado
   docenteInput.addEventListener('input', (e) => {
     const query = e.target.value;
     if (query.trim()) {
       const matches = filterDocentes(query);
       showDropdown(matches);
-      currentHighlighted = -1; // Reset highlight
+      currentHighlighted = -1;
     } else {
       hideDropdown();
       showHeatMap();
@@ -492,14 +602,12 @@ let dataActiv = [];
     }, 200);
   });
 
-  // Prevenir que el dropdown se cierre al hacer click en él
   docenteDropdown.addEventListener('mousedown', (e) => {
     e.preventDefault();
   });
 
   clearBtn?.addEventListener('click', clearSelection);
 
-  // Click fuera para cerrar dropdown
   document.addEventListener('click', (e) => {
     if (!docenteInput.contains(e.target) && !docenteDropdown.contains(e.target)) {
       hideDropdown();

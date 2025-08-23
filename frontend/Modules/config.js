@@ -401,26 +401,33 @@ async function populatePeriodSelectFromLocal() {
 ================================= */
 async function loadTemplates() {
   try {
+    // Primero intentar cargar desde IndexedDB (datos locales)
+    const local = await loadData('emailTemplates');
+    if (local) {
+      document.getElementById('correo').value = local.correoAutoridad || '';
+      document.getElementById('template-autoridad').value = local.autoridad || '';
+      document.getElementById('template-docente').value = local.docente || '';
+      document.getElementById('template-estudiante').value = local.estudiante || '';
+    }
+
+    // Luego cargar las plantillas desde la API (solo las 3 plantillas, no correoAutoridad)
     const res = await fetch(`${API_BASE}/plantillas`);
     const data = await res.json();
 
-    document.getElementById('template-autoridad').value = data.autoridad || '';
-    document.getElementById('template-docente').value   = data.docente   || '';
-    document.getElementById('template-estudiante').value= data.estudiante|| '';
-
-    const local = await loadData('emailTemplates');
-    if (local) {
-      document.getElementById('correo').value = local.correoAutoridad;
-    }
+    // Solo actualizar las plantillas desde la API, mantener correoAutoridad local
+    document.getElementById('template-autoridad').value = data.autoridad || document.getElementById('template-autoridad').value;
+    document.getElementById('template-docente').value = data.docente || document.getElementById('template-docente').value;
+    document.getElementById('template-estudiante').value = data.estudiante || document.getElementById('template-estudiante').value;
 
   } catch (error) {
-    console.error('⚠️ Error cargando plantillas de la BD:', error);
+    console.error('⚠️ Error cargando plantillas de la API:', error);
+    // Si falla la API, solo usar datos locales
     const local = await loadData('emailTemplates');
     if (local) {
-      document.getElementById('correo').value = local.correo || '';
+      document.getElementById('correo').value = local.correoAutoridad || '';
       document.getElementById('template-autoridad').value = local.autoridad || '';
-      document.getElementById('template-docente').value   = local.docente   || '';
-      document.getElementById('template-estudiante').value= local.estudiante|| '';
+      document.getElementById('template-docente').value = local.docente || '';
+      document.getElementById('template-estudiante').value = local.estudiante || '';
     }
   }
 }
@@ -452,27 +459,45 @@ document.addEventListener('DOMContentLoaded', async function () {
     const templateAutoridad = document.getElementById('template-autoridad').value;
     const templateDocente   = document.getElementById('template-docente').value;
     const templateEstudiante= document.getElementById('template-estudiante').value;
-    const correoAutoridad = document.getElementById('correo').value;
+    const correoInput = document.getElementById('correo').value.trim();
+    const correoAutoridad = correoInput === "" ? "alvaro.espinozabu@ug.edu.ec" : correoInput;
 
-    const templates2 = { correoAutoridad: correoAutoridad, autoridad: templateAutoridad, docente: templateDocente, estudiante: templateEstudiante };
-    const templates = { autoridad: templateAutoridad, docente: templateDocente, estudiante: templateEstudiante };
+    // Guardar todo localmente en IndexedDB
+    const localTemplates = { 
+      correoAutoridad: correoAutoridad, 
+      autoridad: templateAutoridad, 
+      docente: templateDocente, 
+      estudiante: templateEstudiante 
+    };
+    await saveData('emailTemplates', localTemplates);
 
-    await saveData('emailTemplates', templates2); // guardar local
+    // Solo enviar las plantillas (no correoAutoridad) a la API
+    const apiTemplates = { 
+      autoridad: templateAutoridad, 
+      docente: templateDocente, 
+      estudiante: templateEstudiante 
+    };
+
     try {
       await fetch(`${API_BASE}/plantillas`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(templates)
+        body: JSON.stringify(apiTemplates)
       });
       await Swal.fire({
         icon: 'success',
-        title: '¡Plantillas procesadas!',
+        title: '¡Plantillas guardadas!',
         text: '✅ Plantillas guardadas correctamente.',
         confirmButtonColor: '#3085d6'
       });
     } catch (error) {
-      console.error('❌ Error al guardar en la BD:', error);
-      alert('❌ No se pudo guardar en la base de datos.');
+      console.error('❌ Error al guardar plantillas en la API:', error);
+      await Swal.fire({
+        icon: 'warning',
+        title: 'Guardado parcial',
+        text: '⚠️ Las plantillas se guardaron localmente, pero no se pudo sincronizar con el servidor.',
+        confirmButtonColor: '#f39c12'
+      });
     }
   });
 

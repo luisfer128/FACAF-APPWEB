@@ -1,4 +1,3 @@
-// reportes.js (FIX claves IndexedDB + fallbacks)
 import { loadData } from '../indexeddb-storage.js';
 
 /* ===== Helpers ===== */
@@ -126,7 +125,7 @@ async function getStudentsByPeriod() {
 
   const labels = [...map.keys()].sort((A,B)=>{
     const a=parse(A), b=parse(B);
-    if (a.y1!==b.y1) return a.y1-b.y1;     // ascendente
+    if (a.y1!==b.y1) return a.y1-b.y1;
     if (a.term!==b.term) return a.term-b.term;
     return String(a.raw).localeCompare(String(b.raw));
   });
@@ -230,14 +229,11 @@ function computeTop10DocentesReprobados(rows) {
   const totales   = {};
 
   rows.forEach(r => {
-    // Estado válido (solo Aprobada/Reprobada)
     const estado = canon(r.ESTADO);
     if (!ESTADOS_PERMITIDOS.has(estado)) return;
 
-    // Excluir materias específicas (p.ej. Inglés I–IV)
     if (materiaExcluida(r.MATERIA)) return;
 
-    // Requerir FORMATO EXACTO "ID - NOMBRE" y descartar otros (reajustes, convalidaciones, etc.)
     const d = parseDocente(r.DOCENTE);
     if (!d || d.canonNombre === 'MOVILIDAD') return;
 
@@ -272,7 +268,6 @@ function renderKPIs(m) {
 async function renderCharts(m) {
   destroyCharts();
 
-  // Barras horizontales NO. VEZ
   chartNoVez = new Chart(document.getElementById('chartNoVez'), {
     type: 'bar',
     data: {
@@ -291,7 +286,6 @@ async function renderCharts(m) {
     }
   });
 
-  // Aprobados vs Reprobados (usa CURSANDO como "Otros")
   chartAprobReprob = new Chart(document.getElementById('chartAprobReprob'), {
     type: 'doughnut',
     data: {
@@ -299,13 +293,27 @@ async function renderCharts(m) {
       datasets: [{ data: [m.estadoCounts.APROBADO, m.estadoCounts.REPROBADO, m.estadoCounts.CURSANDO] }]
     },
     options: {
-      responsive: true, maintainAspectRatio: false, cutout: '60%',
-      plugins: { legend: { position:'bottom' },
-        tooltip: { callbacks: { label:(ctx)=>` ${ctx.label}: ${ctx.parsed.toLocaleString('es')}` } } }
+      responsive: true, 
+      maintainAspectRatio: false, 
+      cutout: '60%',
+      plugins: { 
+        legend: { position:'bottom' },
+        tooltip: { 
+          callbacks: { 
+            label: (ctx) => {
+              // Calcular el total
+              const total = ctx.dataset.data.reduce((sum, value) => sum + value, 0);
+              // Calcular el porcentaje
+              const percentage = total > 0 ? ((ctx.parsed / total) * 100).toFixed(1) : '0.0';
+              // Mostrar: "Etiqueta: cantidad (porcentaje%)"
+              return ` ${ctx.label}: ${ctx.parsed.toLocaleString('es')} (${percentage}%)`;
+            }
+          } 
+        } 
+      }
     }
   });
 
-  // Estudiantes por período (histórico)
   const sp = await getStudentsByPeriod();
   chartEstPorPeriodo = new Chart(document.getElementById('chartEstPorPeriodo'), {
     type: 'bar',
@@ -345,7 +353,6 @@ async function renderCharts(m) {
 
 /* ===== Tablas ===== */
 function renderTables(m, topDocentes) {
-  // Top Materias (igual)
   const tbM = document.querySelector('#tbl-materias tbody');
   if (tbM) {
     tbM.innerHTML = m.materias.map((row,i)=>`
@@ -359,7 +366,6 @@ function renderTables(m, topDocentes) {
     `).join('');
   }
 
-  // Top 10 DOCENTES (solo nombre del docente)
   const tblD  = document.querySelector('#tbl-docentes');
   const thead = tblD?.querySelector('thead');
   const tbD   = tblD?.querySelector('tbody');
@@ -405,7 +411,7 @@ async function loadReport() {
   }
 
   const metrics     = buildMetrics(rows);
-  const topDocentes = computeTop10DocentesReprobados(rows); // <<< agregado
+  const topDocentes = computeTop10DocentesReprobados(rows);
   renderKPIs(metrics);
   renderCharts(metrics);
   renderTables(metrics, topDocentes);
